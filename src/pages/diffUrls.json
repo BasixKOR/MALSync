@@ -1,27 +1,4 @@
 {
-  "0.8.21": {
-    "Gogoanime": [
-      "https://gogoanime.lu/*"
-    ],
-    "iframe": [
-      "https://vidstreaming1.xyz/*",
-      "https://vizcloud.store/embed/*",
-      "https://vizcloud.store/e/*",
-      "https://vizcloud.site/embed/*",
-      "https://vizcloud.site/e/*",
-      "https://sbfull.com/e/*",
-      "https://voeunblock3.com/e/*",
-      "https://voeunbl0ck.com/e/*",
-      "https://voeunblck.com/e/*",
-      "https://voeunblk.com/e/*",
-      "https://voe-un-block.com/e/*",
-      "https://voeun-block.net/e/*",
-      "https://un-block-voe.net/e/*",
-      "https://v-o-e-unblock.com/e/*",
-      "https://audaciousdefaulthouse.com/e/*",
-      "https://www.animeworld.tv/api/episode/serverPlayerAnimeWorld?id=*"
-    ]
-  },
   "0.8.22": {
     "Aniflix": [
       "https://aniflix.cc/*"
@@ -144,6 +121,24 @@
       "https://antecoxalbobbing1010.com/e/*",
       "https://www.turkanime.co/embed/*",
       "https://aniyan.net/jwplayer/*"
+    ]
+  },
+  "0.9.3": {
+    "BlueSolo": [
+      "https://www.bluesolo.org/manga/*"
+    ],
+    "MangasOrigines": [
+      "https://mangas-origines.fr/catalogue*"
+    ],
+    "iframe": [
+      "https://www.myvi.tv/embed/*",
+      "https://playtaku.online/embedplus*",
+      "https://playtaku.online/streaming.php?*",
+      "https://playtaku.online/load.php?*",
+      "https://playtaku.online/loadserver.php?*",
+      "https://availedsmallest.com/e/*",
+      "https://player.simplyaweeb.to/*",
+      "https://stream.simplyaweeb.to/*"
     ]
   }
 }
