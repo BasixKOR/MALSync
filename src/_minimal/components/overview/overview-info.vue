@@ -5,14 +5,27 @@
       <div v-for="item in info" :key="item.title" class="item">
         <div class="type">{{ item.title }}</div>
         <div class="content">
-          <template v-for="(link, index) in item.body" :key="link.text">
-            <MediaLink v-if="link.url" color="secondary" :href="link.url">
-              {{ link.text }}
-            </MediaLink>
-            <span v-else>
-              {{ link.text }}
-            </span>
-            <span v-if="Number(index) + 1 < item.body.length">, </span>
+          <template v-for="(link, index) in item.body" :key="link">
+            <div v-if="'type' in link && link.type === 'weektime' && link.date">
+              <template v-if="link.date instanceof Date || !isNaN(Date.parse(link.date))">
+                <span dir="auto">{{ getTimezoneDate(link.date) }}</span>
+                <br />
+                <span>{{ getTimezoneDate(link.date, 'UTC') }}</span>
+                <br />
+                <span>{{ getTimezoneDate(link.date, 'Asia/Tokyo') }}</span>
+              </template>
+              <template v-else>{{ link.date }}</template>
+            </div>
+            <template v-else-if="!('type' in link)">
+              <MediaLink v-if="link.url" dir="auto" color="secondary" :href="link.url">
+                {{ link.text }}
+              </MediaLink>
+              <span v-else dir="auto">
+                {{ link.text }}
+              </span>
+              <span v-if="link.subtext" class="subtext">({{ link.subtext }})</span>
+              <span v-if="Number(index) + 1 < item.body.length" dir="auto">, </span>
+            </template>
           </template>
         </div>
       </div>
@@ -59,12 +72,12 @@
 
 <script lang="ts" setup>
 import { PropType } from 'vue';
-import { timestampToShortTime } from '../../../utils/time';
 import { Overview } from '../../../_provider/metaOverviewAbstract';
 import { SingleAbstract } from '../../../_provider/singleAbstract';
 import Header from '../header.vue';
 import MediaLink from '../media-link.vue';
 import TextIcon from '../text-icon.vue';
+import { IntlDateTime } from '../../../utils/IntlWrapper';
 
 defineProps({
   info: {
@@ -79,14 +92,34 @@ defineProps({
 
 function getTitle(item) {
   if (item.lastEp && item.lastEp.timestamp) {
-    return timestampToShortTime(item.lastEp.timestamp);
+    return new IntlDateTime(Number(item.lastEp.timestamp)).getRelativeNowFriendlyText('Progress', {
+      style: 'long',
+    });
   }
   if (item.predicition && item.predicition.timestamp) {
     return api.storage.lang('prediction_next', [
-      timestampToShortTime(item.predicition.timestamp).trim(),
+      new IntlDateTime(Number(item.predicition.timestamp)).getRelativeNowFriendlyText('Progress', {
+        style: 'long',
+      }),
     ]);
   }
   return '';
+}
+
+function getTimezoneDate(
+  dateElement: Date | string,
+  timezone = Intl.DateTimeFormat().resolvedOptions().timeZone,
+) {
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: timezone === 'Asia/Tokyo' ? undefined : 'short',
+    timeZone: timezone,
+  };
+
+  const date = typeof dateElement === 'string' ? new Date(dateElement) : dateElement;
+  return `${new IntlDateTime(date).getDateTimeText(options)}${timezone === 'Asia/Tokyo' ? ' JST' : ''}`;
 }
 </script>
 
@@ -113,7 +146,7 @@ function getTitle(item) {
   }
 
   .type {
-    margin-right: 10px;
+    margin-inline-end: 10px;
     font-weight: 600;
     white-space: nowrap;
   }
@@ -145,5 +178,10 @@ function getTitle(item) {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.subtext {
+  margin-left: 3px;
+  font-size: @small-text;
 }
 </style>

@@ -1,6 +1,9 @@
 <template>
   <div class="option">
-    <div class="title">
+    <div v-if="labelSection" class="title">
+      <a v-if="path.length" class="anchor-link" :href="'#' + ['settings', ...path].join('/')">
+        <div class="material-icons">link</div>
+      </a>
       <slot name="title">
         {{ typeof title === 'function' ? (title as any)() : title }}
       </slot>
@@ -9,16 +12,22 @@
       </MediaLink>
       <span v-if="tooltip" :data-text="tooltip" class="material-icons tooltip">help</span>
     </div>
-    <div class="component" :class="`type-${component}`">
+    <div :class="`type-${component} ${labelSection ? 'component' : 'only-component'}`">
       <slot name="component">
-        <component :is="components[component]" v-bind="props" v-model="model"><slot /></component>
+        <component
+          :is="components[component]"
+          v-bind="props"
+          v-model="model"
+          @click="$emit('click')"
+          ><slot
+        /></component>
       </slot>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { computed, PropType, ref } from 'vue';
 import FormButton from '../form/form-button.vue';
 import FormCheckbox from '../form/form-checkbox.vue';
 import FormColorPicker from '../form/form-color-picker.vue';
@@ -28,6 +37,7 @@ import FormText from '../form/form-text.vue';
 import formSwitch from '../form/form-switch.vue';
 import FormShortcut from '../form/form-shortcut.vue';
 import MediaLink from '../media-link.vue';
+import FormMultiSelect from '../form/form-multi-select.vue';
 
 const components = {
   button: FormButton,
@@ -38,9 +48,10 @@ const components = {
   input: FormText,
   switch: formSwitch,
   shortcut: FormShortcut,
+  multiSelect: FormMultiSelect,
 };
 
-const emit = defineEmits(['change']);
+const emit = defineEmits(['change', 'click']);
 
 const properties = defineProps({
   title: {
@@ -69,6 +80,14 @@ const properties = defineProps({
     type: String,
     required: false,
     default: null,
+  },
+  labelSection: {
+    type: Boolean,
+    default: true,
+  },
+  path: {
+    type: Array as PropType<string[]>,
+    default: () => [],
   },
 });
 
@@ -108,19 +127,23 @@ if (properties.option) {
   overflow: show;
 }
 
+.only-component {
+  width: 100%;
+}
+
 .type-slider {
   flex-grow: 1;
   max-width: 150px;
 }
 
 .infoLink {
-  margin-left: 10px;
+  margin-inline-start: 10px;
 }
 
 .tooltip {
   cursor: help;
   font-size: @normal-text;
-  margin-left: 5px;
+  margin-inline-start: 5px;
   vertical-align: bottom;
   position: relative;
 
@@ -136,8 +159,8 @@ if (properties.option) {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    left: 100%;
-    margin-left: 15px;
+    inset-inline-start: 100%;
+    margin-inline-start: 15px;
     width: 40vw;
     max-width: 500px;
     border-radius: 10px;
@@ -149,6 +172,21 @@ if (properties.option) {
 
   &:hover::before {
     display: block;
+  }
+}
+
+.anchor-link {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 100%;
+  display: flex;
+  align-items: center;
+  padding-right: 2px;
+  opacity: 0;
+
+  &:hover {
+    opacity: 1;
   }
 }
 </style>

@@ -1,6 +1,7 @@
 {
-  "search": "https://animesonline.org/?s={searchtermPlus}",
+  "search": "https://www.animesonline.in/busca?s={searchtermPlus}",
   "urls": {
-    "match": ["*://animesonline.org/*"]
+    "match": ["*://*.animesonline.in/*"]
   }
 }
+

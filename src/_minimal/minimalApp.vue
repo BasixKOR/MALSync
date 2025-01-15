@@ -1,12 +1,13 @@
 <template>
   <Theming />
   <MediaModal />
-  <NavBar />
+  <SettingsPermissionOverviewSmall v-if="isExtension()" />
+  <NavBar v-if="rootHtml.getAttribute('mode') !== 'install'" />
   <div class="content">
     <router-view v-slot="{ Component, route }">
       <transition
-        :name="route.meta.transition as string || 'fade'"
-        :duration="route.meta.duration as number || 0"
+        :name="(route.meta.transition as string) || 'fade'"
+        :duration="(route.meta.duration as number) || 0"
       >
         <keep-alive max="5" :exclude="['overview']">
           <component
@@ -25,6 +26,7 @@ import { inject, nextTick, onMounted, onUnmounted, provide, ref } from 'vue';
 import Theming from './components/theming.vue';
 import NavBar from './components/nav/nav-bar.vue';
 import MediaModal from './components/media/media-modal.vue';
+import SettingsPermissionOverviewSmall from './components/settings/settings-permission-overview-small.vue';
 
 const breakpoint = ref('desktop' as 'desktop' | 'mobile');
 
@@ -40,6 +42,10 @@ function setBreakpoint() {
   }
 }
 setBreakpoint();
+
+function isExtension() {
+  return api.type === 'webextension';
+}
 
 onMounted(() => {
   rootWindow.addEventListener('resize', setBreakpoint);

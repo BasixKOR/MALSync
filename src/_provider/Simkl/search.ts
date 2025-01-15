@@ -36,7 +36,7 @@ export const search: searchInterface = async function (
 
 async function call(
   url,
-  sData = {},
+  sData = {} as any,
   asParameter = false,
   methode: 'GET' | 'POST' = 'GET',
   login = true,
@@ -55,6 +55,10 @@ async function call(
 
   if (!login) {
     con.log('No login');
+  }
+
+  if (methode === 'GET') {
+    sData = undefined;
   }
 
   return api.request
@@ -76,7 +80,7 @@ async function call(
             break;
           }
           utils.flashm(
-            'Please Authenticate <a target="_blank" href="https://simkl.com/oauth/authorize?response_type=code&client_id=39e8640b6f1a60aaf60f3f3313475e830517badab8048a4e52ff2d10deb2b9b0&redirect_uri=https://simkl.com/apps/chrome/mal-sync/connected/">Here</a>',
+            `Please Authenticate <a target="_blank" href="${helper.getAuthUrl()}">Here</a>`,
             { error: true, type: 'error' },
           );
           throw getThrowError();

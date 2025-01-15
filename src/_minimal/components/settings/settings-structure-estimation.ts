@@ -1,6 +1,9 @@
 import { ConfObj } from '../../../_provider/definitions';
+import { IntlDuration } from '../../../utils/IntlWrapper';
 import SettingsGeneral from './settings-general.vue';
 import SettingsProgressDropdown from './settings-progress-dropdown.vue';
+
+const intl = new IntlDuration();
 
 function startProgressSync() {
   if (api.type === 'webextension') {
@@ -14,26 +17,78 @@ function startProgressSync() {
   }
 }
 
+export const notificationsSection: ConfObj[] = [
+  {
+    key: 'progressNotificationsAnime',
+    title: () => `${api.storage.lang('settings_Notifications')} (${api.storage.lang('Anime')})`,
+    condition: () => Boolean(Number(api.settings.get('progressInterval'))),
+    props: {
+      component: 'checkbox',
+      option: 'progressNotificationsAnime',
+    },
+    component: SettingsGeneral,
+  },
+  {
+    key: 'progressNotificationsManga',
+    title: () => `${api.storage.lang('settings_Notifications')} (${api.storage.lang('Manga')})`,
+    condition: () => Boolean(Number(api.settings.get('progressInterval'))),
+    props: {
+      component: 'checkbox',
+      option: 'progressNotificationsManga',
+    },
+    component: SettingsGeneral,
+  },
+  {
+    key: 'notificationsSticky',
+    title: () => api.storage.lang('settings_Notifications_Sticky'),
+    props: {
+      component: 'checkbox',
+      option: 'notificationsSticky',
+    },
+    component: SettingsGeneral,
+  },
+];
+
 export const estimation: ConfObj[] = [
   {
     key: 'progressInterval',
     title: () => api.storage.lang('settings_Interval'),
     change: () => startProgressSync(),
-    props: () => ({
-      component: 'dropdown',
-      option: 'progressInterval',
-      props: {
-        options: [
-          { title: api.storage.lang('settings_Interval_Off'), value: '0' },
-          { title: '30min', value: '30' },
-          { title: '1h', value: '60' },
-          { title: '2h', value: '120' },
-          { title: '4h', value: '240' },
-          { title: '12h', value: '720' },
-          { title: '24h', value: '1440' },
-        ],
-      },
-    }),
+    props: () => {
+      return {
+        component: 'dropdown',
+        option: 'progressInterval',
+        props: {
+          options: [
+            { title: api.storage.lang('settings_Interval_Off'), value: '0' },
+            {
+              title: `${intl.setDuration({ minutes: 30 }).getRelativeText({ style: 'long' })}`,
+              value: '30',
+            },
+            {
+              title: `${intl.setDuration({ hours: 1 }).getRelativeText({ style: 'long' })}`,
+              value: '60',
+            },
+            {
+              title: `${intl.setDuration({ hours: 2 }).getRelativeText({ style: 'long' })}`,
+              value: '120',
+            },
+            {
+              title: `${intl.setDuration({ hours: 4 }).getRelativeText({ style: 'long' })}`,
+              value: '240',
+            },
+            {
+              title: `${intl.setDuration({ hours: 12 }).getRelativeText({ style: 'long' })}`,
+              value: '720',
+            },
+            {
+              title: `${intl.setDuration({ hours: 24 }).getRelativeText({ style: 'long' })}`,
+              value: '1440',
+            },
+          ],
+        },
+      };
+    },
     component: SettingsGeneral,
   },
   {
@@ -60,26 +115,7 @@ export const estimation: ConfObj[] = [
     },
     component: SettingsProgressDropdown,
   },
-  {
-    key: 'progressNotificationsAnime',
-    title: () => `${api.storage.lang('settings_Notifications')} (${api.storage.lang('Anime')})`,
-    condition: () => Boolean(Number(api.settings.get('progressInterval'))),
-    props: {
-      component: 'checkbox',
-      option: 'progressNotificationsAnime',
-    },
-    component: SettingsGeneral,
-  },
-  {
-    key: 'progressNotificationsManga',
-    title: () => `${api.storage.lang('settings_Notifications')} (${api.storage.lang('Manga')})`,
-    condition: () => Boolean(Number(api.settings.get('progressInterval'))),
-    props: {
-      component: 'checkbox',
-      option: 'progressNotificationsManga',
-    },
-    component: SettingsGeneral,
-  },
+  ...notificationsSection,
   {
     key: 'loadPTWForProgress',
     title: () => api.storage.lang('settings_loadPTWForProgress'),

@@ -2,15 +2,18 @@ import {
   releaseItemInterface,
   progressIsOld,
   single as updateProgress,
-} from '../background/releaseProgress';
-import { timestampToShortTime } from './time';
+} from '../background/releaseProgressUtils';
+import { IntlDateTime } from './IntlWrapper';
 
 export class Progress {
   protected logger;
 
   protected releaseItem: undefined | releaseItemInterface = undefined;
 
-  constructor(protected cacheKey: string, protected type: 'anime' | 'manga') {
+  constructor(
+    protected cacheKey: string,
+    protected type: 'anime' | 'manga',
+  ) {
     this.logger = con.m('progress').m(cacheKey.toString());
     return this;
   }
@@ -100,27 +103,46 @@ export class Progress {
   }
 
   getPrediction(): string {
-    return timestampToShortTime(this.getPredictionTimestamp());
+    const timestamp = Number(this.getPredictionTimestamp());
+    if (Number.isNaN(timestamp)) return '';
+    const progress = new IntlDateTime(timestamp).getRelativeNowFriendlyText('Progress', {
+      style: 'significantLongNarrow',
+    });
+    return progress;
   }
 
   getPredictionText(): string {
-    const pre = this.getPrediction();
-    if (pre) return api.storage.lang(`prediction_Episode_${this.type}`, [pre]);
-    return '';
+    const timestamp = Number(this.getPredictionTimestamp());
+    if (Number.isNaN(timestamp)) return '';
+    const dt = new IntlDateTime(Number(timestamp));
+    const time = dt.getRelativeNowText('Progress', { style: 'long' });
+    if (!dt.isValidDate()) return '';
+    if (dt.isNow()) return api.storage.lang('bookmarksItem_now');
+    return api.storage.lang(`prediction_Episode_${this.type}`, [time]);
   }
 
   getLastTimestamp(): number {
+    if (!this.getProgressLastTimestamp()) return NaN;
     return this.getProgressLastTimestamp();
   }
 
-  getLast(ago = true): string {
-    return timestampToShortTime(this.getLastTimestamp(), ago);
+  getLast(): string {
+    const timestamp = Number(this.getLastTimestamp());
+    if (Number.isNaN(timestamp)) return '';
+    const last = new IntlDateTime(timestamp).getRelativeNowFriendlyText('Progress', {
+      style: 'significantLongNarrow',
+    });
+    return last;
   }
 
   getLastText(): string {
-    const last = this.getLast(false);
-    if (last) return api.storage.lang(`prediction_Last_${this.type}`, [last]);
-    return '';
+    const timestamp = Number(this.getLastTimestamp());
+    if (Number.isNaN(timestamp)) return '';
+    const dt = new IntlDateTime(Number(timestamp));
+    const time = dt.getRelativeNowText('Progress', { style: 'long' });
+    if (!dt.isValidDate()) return '';
+    if (dt.isNow()) return api.storage.lang('bookmarksItem_now');
+    return api.storage.lang(`prediction_Last_${this.type}`, [time]);
   }
 
   getAuto(): string {

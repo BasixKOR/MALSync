@@ -39,18 +39,23 @@
       <Section>
         <FormButton @click="addPermission()"><div class="material-icons">add</div></FormButton>
       </Section>
-      <div v-if="!verifyEverything">
-        <FormButton color="secondary">{{ lang('settings_custom_domains_wrong') }}</FormButton>
-      </div>
-      <div v-else-if="!hasAllPermissions || JSON.stringify(model) !== JSON.stringify(permissions)">
-        <FormButton color="primary" @click="savePermissions()">{{ lang('Update') }}</FormButton>
-      </div>
+      <SessionSupportsPermissions>
+        <div v-if="!verifyEverything">
+          <FormButton color="secondary">{{ lang('settings_custom_domains_wrong') }}</FormButton>
+        </div>
+        <div
+          v-else-if="!hasAllPermissions || JSON.stringify(model) !== JSON.stringify(permissions)"
+        >
+          <FormButton color="primary" @click="savePermissions()">{{ lang('Update') }}</FormButton>
+        </div>
+      </SessionSupportsPermissions>
     </Card>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue';
+import { isValidPattern } from 'webext-patterns';
 import { checkPermissions, getPageOptions, requestPermissions } from '../../../utils/customDomains';
 import Card from '../card.vue';
 import FormDropdown from '../form/form-dropdown.vue';
@@ -59,6 +64,7 @@ import FormButton from '../form/form-button.vue';
 import Section from '../section.vue';
 import { domainType } from '../../../background/customDomain';
 import MediaLink from '../media-link.vue';
+import SessionSupportsPermissions from '../session-supports-permissions.vue';
 
 defineProps({
   title: {
@@ -67,9 +73,7 @@ defineProps({
   },
 });
 
-const options = getPageOptions()
-  .map(el => ({ title: el.title, value: el.key }))
-  .sort((a, b) => utils.sortAlphabetically(a.title, b.title));
+const options = getPageOptions().map(el => ({ title: el.title, value: el.key }));
 
 const permissions = ref([] as domainType[]);
 
@@ -95,17 +99,7 @@ function addPermission() {
 }
 
 function validDomain(domain) {
-  let origin;
-  try {
-    origin = new URL(domain).origin;
-  } catch (e) {
-    return false;
-  }
-
-  return (
-    /^https?:\/\/(localhost|(?:www?\d?\.)?((?:(?!www\.|\.).)+\.[a-zA-Z0-9.]+))/.test(domain) &&
-    origin
-  );
+  return isValidPattern(domain);
 }
 
 const hasAllPermissions = ref(false);

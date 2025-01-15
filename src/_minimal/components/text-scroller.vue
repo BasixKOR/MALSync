@@ -1,5 +1,5 @@
 <template>
-  <div class="horizontal-scroller" :class="{ open, loading }" @click="open = !open">
+  <div class="horizontal-scroller" dir="ltr" :class="{ open, loading }" @click="open = !open">
     <slot v-if="!loading" />
     <div v-else class="loading-placeholder"></div>
   </div>
@@ -24,6 +24,7 @@ const open = ref(false);
 .horizontal-scroller {
   white-space: nowrap;
   overflow: hidden;
+
   @media (hover: none) {
     @gradient: linear-gradient(270deg, transparent, #000 100px);
 

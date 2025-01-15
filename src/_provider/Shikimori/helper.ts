@@ -66,6 +66,12 @@ export async function apiCall(options: {
         res = JSON.parse(response.responseText);
       }
 
+      if (response.status === 401) {
+        if (options.auth) throw new NotAutenticatedError(res.message ?? res.error);
+        await refreshToken(token.refresh_token);
+        return apiCall(options);
+      }
+
       if (res && res.error) {
         switch (res.error) {
           case 'forbidden':
@@ -117,14 +123,19 @@ export function authRequest(data: { code: string } | { refresh_token: string }) 
 }
 
 async function refreshToken(refresh_token: string) {
-  const res = authRequest({ refresh_token });
+  const res = await authRequest({ refresh_token }).catch(err => {
+    if (err.message === 'invalid_request') {
+      api.settings.set('shikiToken', '');
+    }
+    throw err;
+  });
   await api.settings.set('shikiToken', {
     access_token: res.access_token,
     refresh_token: res.refresh_token,
   });
 }
 
-export function userRequest(): Promise<userRequest> {
+export function userRequest(): Promise<userRequestInterface> {
   return apiCall({
     type: 'GET',
     path: 'users/whoami',
@@ -139,7 +150,7 @@ export function userRequest(): Promise<userRequest> {
 }
 
 export async function userId() {
-  const cacheObj = new Cache(`shiki/userId`, 4 * 60 * 60 * 1000);
+  const cacheObj = new Cache('shiki/userId', 4 * 60 * 60 * 1000);
 
   if (await cacheObj.hasValue()) {
     return cacheObj.getValue();
@@ -170,12 +181,12 @@ export type StatusType =
 
 // eslint-disable-next-line no-shadow
 export enum statusTranslate {
-  'watching' = status.Watching,
-  'planned' = status.PlanToWatch,
-  'completed' = status.Completed,
-  'dropped' = status.Dropped,
-  'on_hold' = status.Onhold,
-  'rewatching' = status.Rewatching,
+  watching = status.Watching,
+  planned = status.PlanToWatch,
+  completed = status.Completed,
+  dropped = status.Dropped,
+  on_hold = status.Onhold,
+  rewatching = status.Rewatching,
 }
 
 export interface StatusRequest {
@@ -218,7 +229,7 @@ export interface MetaRequest {
   released_on: string;
 }
 
-export interface userRequest {
+export interface userRequestInterface {
   id: number;
   nickname: string;
   avatar: string;

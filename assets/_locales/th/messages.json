@@ -502,12 +502,24 @@
         "description": "Search text"
     },
     "correction_NoMal": {
-        "message": "หากไม่พบอะนิเมะ / มังงะ MAL",
-        "description": "Anime/Manga not found in MAL"
+        "message": "หากไม่พบอะนิเมะ / มังงะ $page$",
+        "description": "Anime/Manga not found in MAL",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "MAL"
+            }
+        }
     },
     "correction_NoEntry": {
-        "message": "ไม่มีรายการใน MyAnimelist",
-        "description": "No entry on MyAnimeList"
+        "message": "ไม่มีรายการใน $page$",
+        "description": "No entry on MyAnimeList",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "MAL"
+            }
+        }
     },
     "correction_NewOffset": {
         "message": "ใหม่ชดเชย ($offset$) ตั้ง.",
@@ -979,39 +991,9 @@
         "message": "โปรดอนุญาตป๊อปอัปสำหรับเว็บไซต์นี้",
         "description": "Please allow pop-ups for this website"
     },
-    "minimalClass_versionMsg": {
-        "message": "อัปเดตเป็นเวอร์ชัน $Version$ $Link$CHANGELOG$LinkEnd$",
-        "description": "Update version",
-        "placeholders": {
-            "Version": {
-                "content": "$1",
-                "example": "0.1.4"
-            },
-            "Link": {
-                "content": "$2",
-                "example": "[<a>"
-            },
-            "LinkEnd": {
-                "content": "</a>]",
-                "example": "</a>]"
-            }
-        }
-    },
     "minimalClass_versionMsg_Text_1": {
         "message": "ขอบคุณสำหรับการติดตั้ง MAL-Sync",
         "description": "Update version - Text 1"
-    },
-    "minimalClass_versionMsg_Text_2": {
-        "message": "มีคำถาม?",
-        "description": "Update version - Text 2"
-    },
-    "minimalClass_versionMsg_Text_3": {
-        "message": "โอเพ่นซอร์สโค้ด:",
-        "description": "Update version - Text 3"
-    },
-    "minimalClass_versionMsg_Text_4": {
-        "message": "ผู้ใช้ Ublock โปรดสมัครสมาชิกรายการตัวกรองนี้! การแก้ไขปัญหาบางอย่างเช่นภาพที่เสียหาย",
-        "description": "Update version - Text 4"
     },
     "installPage_Mode": {
         "message": "โปรดเลือกฐานข้อมูลอะนิเมะที่คุณต้องการใช้:",
@@ -1050,20 +1032,6 @@
     "installPage_Wrong_Description": {
         "message": "คุณสามารถเปลี่ยนความสัมพันธ์ที่แสดงใน GIF ด้านล่างได้อย่างง่ายดาย ตอนที่ ออฟเซ็ต สามารถตั้งค่าได้ในหน้านั้นด้วย",
         "description": "Description of the wrong section on the install page"
-    },
-    "Anilist_Authenticate": {
-        "message": "กรุณารับรองความถูกต้อง $Link1$Here$Link2$",
-        "description": "Update version - Text 3",
-        "placeholders": {
-            "Link1": {
-                "content": "<a target=\"_blank\" href=\"https://anilist.co/api/v2/oauth/authorize?client_id=1487&response_type=token\">",
-                "example": "<a>"
-            },
-            "Link2": {
-                "content": "</a>",
-                "example": "</a>"
-            }
-        }
     },
     "Emby_Authenticate": {
         "message": "MAL-Sync ต้องการการตรวจสอบสิทธิ์ในการทำงาน ข้อมูลเพิ่มเติม $Link1$Here$Link2$",
@@ -1134,5 +1102,9 @@
     "filler_recap_confirm": {
         "message": "ตอนนี้ได้รับการทำเครื่องหมายว่าเป็นการสรุปที่ MyAnimelist คุณต้องการข้าม?",
         "description": "Question if the user wants to skip the recap"
+    },
+    "locale": {
+        "message": "th",
+        "description": "Current locale"
     }
 }

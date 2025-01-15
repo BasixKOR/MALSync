@@ -1,5 +1,5 @@
 /* eslint-disable no-shadow */
-import { status } from '../definitions';
+import { startFinishDate, status } from '../definitions';
 import { clientId } from '../../utils/oauth';
 import { NotAutenticatedError, NotFoundError, parseJson, ServerOfflineError } from '../Errors';
 
@@ -48,9 +48,7 @@ export async function apiCall(options: {
         res = JSON.parse(response.responseText);
       } catch (e) {
         if (checkIfBanned(response.responseText)) {
-          throw new Error(
-            `Your IP has been banned on MAL, change your IP or wait for it to get unbanned`,
-          );
+          throw new Error(api.storage.lang('Error_Blocked', ['MyAnimeList']));
         }
         throw e;
       }
@@ -67,7 +65,7 @@ export async function apiCall(options: {
             throw new NotFoundError(res.message ?? res.error);
           case 'invalid_content':
             throw new Error(
-              `This Entry is currently pending approval. It can´t be saved to mal for now`,
+              'This Entry is currently pending approval. It can´t be saved to mal for now',
             );
           default:
             throw new Error(res.message ?? res.error);
@@ -103,9 +101,7 @@ async function refreshToken(logger) {
         return parseJson(res.responseText);
       } catch (e) {
         if (checkIfBanned(res.responseText)) {
-          throw new Error(
-            `Your IP has been banned on MAL, change your IP or wait for it to get unbanned`,
-          );
+          throw new Error(api.storage.lang('Error_Blocked', ['MyAnimeList']));
         }
         throw e;
       }
@@ -131,17 +127,37 @@ function checkIfBanned(text: string) {
 }
 
 export enum animeStatus {
-  'watching' = status.Watching,
-  'completed' = status.Completed,
-  'on_hold' = status.Onhold,
-  'dropped' = status.Dropped,
-  'plan_to_watch' = status.PlanToWatch,
+  watching = status.Watching,
+  completed = status.Completed,
+  on_hold = status.Onhold,
+  dropped = status.Dropped,
+  plan_to_watch = status.PlanToWatch,
 }
 
 export enum mangaStatus {
-  'reading' = status.Watching,
-  'completed' = status.Completed,
-  'on_hold' = status.Onhold,
-  'dropped' = status.Dropped,
-  'plan_to_read' = status.PlanToWatch,
+  reading = status.Watching,
+  completed = status.Completed,
+  on_hold = status.Onhold,
+  dropped = status.Dropped,
+  plan_to_read = status.PlanToWatch,
+}
+
+export function getRoundedDate(date?: string): startFinishDate {
+  if (!date || !/^\d{4}(?:-\d\d){0,2}$/.test(date)) {
+    return null;
+  }
+
+  const year = date.substring(0, 4);
+
+  let month = date.substring(5, 7);
+  if (month.length !== 2) {
+    month = '01';
+  }
+
+  let day = date.substring(8, 10);
+  if (day.length !== 2) {
+    day = '01';
+  }
+
+  return `${year}-${month}-${day}`;
 }

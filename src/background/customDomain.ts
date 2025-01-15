@@ -1,103 +1,65 @@
-import { CustomDomainError } from '../utils/errors';
 import { isIframeUrl } from '../utils/manifest';
-import { Shark } from '../utils/shark';
 
 const logger = con.m('Custom Domain');
 
 export type domainType = { domain: string; page: string; auto?: boolean };
 
 export async function initCustomDomain() {
-  await setListener();
   updateListener();
+  await registerScripts();
   logger.log('Initialed');
 }
 
 function updateListener() {
-  chrome.permissions.onAdded.addListener(setListener);
-  chrome.permissions.onRemoved.addListener(setListener);
+  chrome.permissions.onAdded.addListener(registerScripts);
+  chrome.permissions.onRemoved.addListener(registerScripts);
   api.storage.storageOnChanged((changes, namespace) => {
     if (namespace === 'sync' && changes['settings/customDomains']) {
       logger.log('settings/customDomains changed');
-      setListener();
+      registerScripts();
     }
   });
 }
 
-async function setListener() {
-  if (typeof chrome.webNavigation === 'undefined') {
+async function registerScripts() {
+  if (typeof chrome.scripting === 'undefined') {
     con.error('Custom Domain is not possible');
     return;
   }
+
   const domains: domainType[] = await api.settings.getAsync('customDomains');
-  clearListener();
-  if (domains) domains.forEach(d => singleListener(d));
+  await chrome.scripting.unregisterContentScripts();
+  if (domains) {
+    await Promise.all(domains.map(registerScript));
+  }
+
+  const scripts = await chrome.scripting.getRegisteredContentScripts();
+  logger.log(scripts);
 }
 
-let listenerArray: any[] = [];
-
-function clearListener() {
-  logger.log('Clear listener', listenerArray.length);
-  listenerArray.forEach(listen => chrome.webNavigation.onCompleted.removeListener(listen));
-  listenerArray = [];
-}
-
-function singleListener(domainConfig: domainType) {
-  const callback = data => {
-    logger.m('Navigation').log(domainConfig, data);
-    if (domainConfig.page === 'iframe') {
-      if (!data.frameId) {
-        logger.m('Navigation').log('Do not inject iframe on root page');
-        return;
-      }
-      chrome.tabs.executeScript(data.tabId, {
-        file: 'vendor/jquery.min.js',
-        frameId: data.frameId,
-      });
-      chrome.tabs.executeScript(data.tabId, {
-        file: 'i18n.js',
-        frameId: data.frameId,
-      });
-      chrome.tabs.executeScript(data.tabId, {
-        file: 'content/iframe.js',
-        frameId: data.frameId,
-      });
-    } else {
-      if (data.frameId) {
-        logger.m('Navigation').log('Do not inject page scripts in Iframe');
-        return;
-      }
-      chrome.tabs.executeScript(data.tabId, {
-        file: 'vendor/jquery.min.js',
-        frameId: data.frameId,
-      });
-      chrome.tabs.executeScript(data.tabId, {
-        file: 'i18n.js',
-        frameId: data.frameId,
-      });
-      chrome.tabs.executeScript(data.tabId, {
-        file: `content/page_${domainConfig.page}.js`,
-        frameId: data.frameId,
-      });
-      chrome.tabs.executeScript(data.tabId, {
-        file: 'content/content-script.js',
-        frameId: data.frameId,
-      });
-    }
-  };
-  listenerArray.push(callback);
-
-  const fixDomain = utils.makeDomainCompatible(domainConfig.domain);
+async function registerScript(domainConfig: domainType) {
+  if (domainConfig.page === 'hostpermission') return;
+  const fixDomain = domainConfig.domain;
 
   try {
-    chrome.webNavigation.onCompleted.addListener(callback, {
-      url: [{ originAndPathMatches: fixDomain }],
-    });
+    const scriptConfig = {
+      id: fixDomain,
+      js: ['vendor/jquery.min.js', 'i18n.js'],
+      matches: [fixDomain],
+      allFrames: false,
+      runAt: 'document_start' as const,
+    };
+
+    if (domainConfig.page === 'iframe') {
+      scriptConfig.js.push('content/iframe.js');
+      scriptConfig.allFrames = true;
+    } else {
+      scriptConfig.js.push(`content/page_${domainConfig.page}.js`);
+      scriptConfig.js.push('content/content-script.js');
+    }
+
+    await chrome.scripting.registerContentScripts([scriptConfig]);
   } catch (e) {
-    Shark.captureException(new CustomDomainError(e), {
-      tags: {
-        domain: domainConfig.domain,
-      },
-    });
     logger.error(`Could not add listener for ${fixDomain}`, e);
     return;
   }

@@ -4,7 +4,7 @@
     :class="{ close: !open && overflow, loading, fade, dynamic: height === 'dynamic' }"
   >
     <template v-if="!loading">
-      <div ref="inner" class="open-gradient">
+      <div ref="inner" class="open-gradient" dir="auto">
         <slot></slot>
       </div>
       <FormButton
@@ -41,6 +41,10 @@ const props = defineProps({
   height: {
     type: [Number, String] as PropType<number | 'dynamic'>,
     default: 240,
+  },
+  minheight: {
+    type: String,
+    default: '150px',
   },
 });
 
@@ -117,7 +121,7 @@ watch(inner, () => calcOverflow());
 
   &.dynamic {
     height: 100%;
-    min-height: 150px;
+    min-height: v-bind(minheight);
     position: relative;
     &.close .open-gradient {
       max-height: 100%;

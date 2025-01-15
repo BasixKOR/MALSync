@@ -19,11 +19,17 @@ export interface Overview {
   }[];
   info: {
     title: string;
-    body: {
-      text: string;
-      url?: string;
-      subtext?: string;
-    }[];
+    body: (
+      | {
+          text: string;
+          url?: string;
+          subtext?: string;
+        }
+      | {
+          date: Date | string;
+          type: 'weektime';
+        }
+    )[];
   }[];
   openingSongs: {
     title: string;
@@ -51,7 +57,50 @@ export interface Overview {
       };
     }[];
   }[];
+  recommendations?: Recommendation[];
+  reviews?: Review[];
 }
+
+export type Recommendation = {
+  entry: {
+    title: string;
+    url: string;
+    image: string;
+    list?: {
+      status: number;
+      score: number;
+      episode: number;
+    };
+  };
+  stats?: {
+    users: string;
+  };
+  user?: {
+    name: string;
+    href: string;
+  };
+  body?: {
+    text: string;
+    more: {
+      url: string;
+      number: number;
+    };
+  };
+};
+
+export type Review = {
+  user: {
+    name: string;
+    image: string;
+    href: string;
+  };
+  body: {
+    people: number;
+    date: string;
+    rating: number;
+    text: string;
+  };
+};
 
 export abstract class MetaOverviewAbstract {
   constructor(protected url: string) {
@@ -66,9 +115,10 @@ export abstract class MetaOverviewAbstract {
   async init() {
     if (this.run) return this;
 
-    if (await this.getCache().hasValueAndIsNotEmpty()) {
+    const cache = this.getCache();
+    if (await cache.hasValueAndIsNotEmpty()) {
       this.logger.log('Cached');
-      this.meta = await this.getCache().getValue();
+      this.meta = await cache.getValue();
       this.run = true;
       await this.fillOverviewState();
       return this;
@@ -76,7 +126,7 @@ export abstract class MetaOverviewAbstract {
 
     await this._init();
     this.run = true;
-    this.getCache().setValue(this.getMeta());
+    await cache.setValue(this.getMeta());
     await this.fillOverviewState();
     return this;
   }
@@ -122,11 +172,14 @@ export abstract class MetaOverviewAbstract {
     return this.meta;
   }
 
-  cacheObj: any = undefined;
+  cacheObj?: Cache = undefined;
 
   getCache() {
     if (this.cacheObj) return this.cacheObj;
-    this.cacheObj = new Cache(`v3/${this.url}`, 5 * 24 * 60 * 60 * 1000);
+    this.cacheObj = new Cache(
+      `v4/${api.storage.lang('locale')}/${this.url}`,
+      5 * 24 * 60 * 60 * 1000,
+    );
     return this.cacheObj;
   }
 }

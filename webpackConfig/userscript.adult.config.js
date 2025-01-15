@@ -13,6 +13,8 @@ const i18n = require('./utils/i18n');
 const pagesUtils = require('./utils/pages');
 const generateMatchExcludes = pagesUtils.generateMatchExcludes;
 
+const { getKeys } = require('./utils/keys');
+
 const generateResources = () => {
   const resources = [];
   for (const key in resourcesJson) {
@@ -26,7 +28,7 @@ const metadata = {
   name: `${package['productName']} Adult [FateXXXBlood Edition]`,
   namespace: 'https://greasyfork.org/users/92233',
   description: package['description'],
-  version: '0.3.0',
+  version: '0.3.2',
   author: package['author'],
   license: 'GPL-3.0',
   iconURL: 'https://raw.githubusercontent.com/MALSync/MALSync/master/assets/icons/icon128.png',
@@ -138,9 +140,9 @@ module.exports = {
       api: path.resolve(__dirname, './../src/api/userscript'),
     }),
     new webpack.DefinePlugin({
-      env: JSON.stringify({
-        CONTEXT: process.env.MODE === 'travis' ? 'production' : 'development',
-      }),
+      __VUE_OPTIONS_API__: true,
+      __VUE_PROD_DEVTOOLS__: false,
+      __MAL_SYNC_KEYS__: JSON.stringify(getKeys()),
     }),
     new webpack.optimize.LimitChunkCountPlugin({
       maxChunks: 1,

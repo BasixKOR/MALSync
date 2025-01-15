@@ -1,6 +1,0 @@
-{
-  "search": "https://yugen.to/search/?q={searchtermPlus}",
-  "urls": {
-    "match": ["*://yugenani.me/*", "*://yugen.to/*"]
-  }
-}

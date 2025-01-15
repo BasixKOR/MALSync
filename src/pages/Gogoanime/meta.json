@@ -1,5 +1,5 @@
 {
-  "search": "https://www1.gogoanime.ai/search.html?keyword={searchterm}",
+  "search": "https://anitaku.pe/search.html?keyword={searchterm}",
   "urls": {
     "match": [
       "*://*.gogoanime.tv/*",
@@ -26,7 +26,21 @@
       "*://*.gogoanime.ar/*",
       "*://*.gogoanime.bid/*",
       "*://*.gogoanimes.co/*",
-      "*://*.animego.to/*"
+      "*://*.animego.to/*",
+      "*://*.gogoanime.gr/*",
+      "*://*.gogoanime.llc/*",
+      "*://*.gogoanime.cl/*",
+      "*://*.gogoanime.hu/*",
+      "*://*.gogoanime.vet/*",
+      "*://*.gogoanimehd.to/*",
+      "*://*.gogoanime3.net/*",
+      "*://*.gogoanimehd.io/*",
+      "*://*.anitaku.to/*",
+      "*://*.anitaku.so/*",
+      "*://*.gogoanime3.co/*",
+      "*://*.anitaku.pe/*",
+      "*://*.gogoanime3.cc/*",
+      "*://*.anitaku.bz/*"
     ]
   }
 }

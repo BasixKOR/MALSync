@@ -49,6 +49,10 @@ export const userscriptLegacy: storageInterface = {
     return message;
   },
 
+  langDirection() {
+    return 'ltr';
+  },
+
   assetUrl(filename) {
     return `https://raw.githubusercontent.com/MALSync/MALSync/master/assets/assets/${filename}`;
   },
@@ -73,6 +77,14 @@ export const userscriptLegacy: storageInterface = {
       this.remove();
     };
     head.get(0).appendChild(s);
+  },
+
+  addProxyScriptToTag(tag, name) {
+    // @ts-ignore
+    const ps: { [key: string]: string } = proxyScripts;
+    if (!ps[name]) throw new Error(`Proxy script ${name} not found`);
+    tag.textContent = ps[name];
+    return tag;
   },
 
   updateDom(head) {

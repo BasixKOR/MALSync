@@ -1,12 +1,26 @@
 <template>
   <button
     ref="triggerNode"
+    tabindex="-1"
     class="dropdown"
     :class="`${size} ${disabled ? 'disabled' : ''}`"
-    @blur="open = false"
-    @keydown.prevent="keyDown($event)"
+    @blur="blur()"
+    @keydown="keyDown($event)"
   >
-    <div class="selector" :class="{ animate }" @click="open = !open">
+    <div
+      tabindex="0"
+      class="selector"
+      :class="{ animate }"
+      @mousedown.prevent
+      @click="
+        open = !open;
+        $el.focus();
+      "
+      @keypress:enter="
+        open = !open;
+        $el.focus();
+      "
+    >
       <slot
         name="select"
         :open="open"
@@ -27,28 +41,45 @@
       </slot>
     </div>
     <div v-show="open" ref="popperNode" class="dropdown-pop">
-      <div class="dropdown-pop-default" :style="`text-align: ${alignItems}`">
-        <div
-          v-for="option in options"
-          :key="option.value"
-          class="dropdown-pop-default-element"
-          :class="{ active: compareFunc(option.value, picked), focus: activeKey === option.value }"
-          @click="select(option)"
-          @mouseover="activeKey = option.value"
-        >
-          <slot name="option" :option="option">
-            {{ option.title || option.label }}
-          </slot>
+      <OverlayScrollbarsComponent
+        class="dropdown-pop-scroll"
+        :options="{ scrollbars: { theme: 'os-theme-custom' } }"
+        defer
+      >
+        <div class="dropdown-pop-default" :style="`text-align: ${alignItems}`">
+          <template v-for="option in options" :key="option.value">
+            <Hr
+              v-if="option.title === '-_-_-' || option.label === '-_-_-'"
+              direction="both"
+              padding="half"
+            />
+            <div
+              v-else
+              class="dropdown-pop-default-element"
+              :class="{
+                active: compareFunc(option.value, picked),
+                focus: activeKey === option.value,
+              }"
+              @click="select(option)"
+              @mouseover="activeKey = option.value"
+            >
+              <slot name="option" :option="option">
+                {{ option.title || option.label }}
+              </slot>
+            </div>
+          </template>
         </div>
-      </div>
+      </OverlayScrollbarsComponent>
     </div>
   </button>
 </template>
 
 <script lang="ts" setup>
 import { computed, PropType, ref, watch, nextTick } from 'vue';
+import { OverlayScrollbarsComponent } from 'overlayscrollbars-vue';
 import FormButton from './form-button.vue';
 import TextIcon from '../text-icon.vue';
+import Hr from '../hr.vue';
 import { usePopper } from '../../composables/popper';
 
 interface Option {
@@ -120,7 +151,15 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'close:popper', 'open:popper']);
 
-const picked = ref(props.modelValue);
+const picked = computed({
+  get() {
+    return props.modelValue;
+  },
+  set(value) {
+    emit('update:modelValue', value);
+  },
+});
+
 const open = ref(false);
 const select = (option: Option) => {
   picked.value = option.value;
@@ -136,16 +175,6 @@ const currentMeta = computed(() => {
   if (!active) return {};
   return active.meta;
 });
-
-watch(picked, value => {
-  emit('update:modelValue', value);
-});
-watch(
-  () => props.modelValue,
-  value => {
-    picked.value = value;
-  },
-);
 
 const popperNode = ref(null);
 const triggerNode = ref(null);
@@ -208,6 +237,10 @@ function keyDown(event: KeyboardEvent) {
     }
 
     case 'Enter': {
+      if (!open.value) {
+        open.value = true;
+        break;
+      }
       if (activeKey.value !== '_-_') {
         picked.value = activeKey.value;
       }
@@ -217,12 +250,23 @@ function keyDown(event: KeyboardEvent) {
 
     case 'Escape': {
       open.value = false;
+      activeKey.value = '_-_';
       break;
     }
 
     default:
-      break;
+      open.value = false;
+      activeKey.value = '_-_';
+      return;
   }
+
+  event.preventDefault();
+}
+
+function blur() {
+  nextTick().then(() => {
+    open.value = false;
+  });
 }
 </script>
 
@@ -235,10 +279,18 @@ function keyDown(event: KeyboardEvent) {
   position: relative;
   display: inline-block;
 
+  &:focus-visible {
+    outline: none;
+  }
+
   .selector {
     .link();
     &.animate {
       .click-move-down();
+    }
+
+    &:focus-visible {
+      .focus-outline();
     }
   }
 
@@ -257,12 +309,15 @@ function keyDown(event: KeyboardEvent) {
 
     position: absolute;
     z-index: 9999;
-    background-color: var(--cl-foreground-solid);
-    padding: 15px 10px;
     width: max-content;
     white-space: normal;
-    overflow-y: auto;
-    overflow: overlay;
+    display: flex;
+    overflow: hidden;
+    &-scroll {
+      padding: 15px 10px;
+      background-color: var(--cl-foreground-solid);
+    }
+
     &-default {
       .link();
 

@@ -1,13 +1,14 @@
 import { MetaOverviewAbstract } from '../metaOverviewAbstract';
 import { NotFoundError, UrlNotSupportedError } from '../Errors';
 import * as helper from './helper';
+import { IntlDateTime, IntlDuration } from '../../utils/IntlWrapper';
 
 export class MetaOverview extends MetaOverviewAbstract {
   constructor(url) {
     super(url);
     this.logger = this.logger.m('Kitsu');
 
-    if (url.match(/kitsu\.io\/(anime|manga)\/.*/i)) {
+    if (url.match(/kitsu\.app\/(anime|manga)\/.*/i)) {
       this.type = utils.urlPart(url, 3) === 'anime' ? 'anime' : 'manga';
       this.kitsuSlug = utils.urlPart(url, 4);
       this.malId = NaN;
@@ -62,26 +63,30 @@ export class MetaOverview extends MetaOverviewAbstract {
     if (!this.kitsuSlug) {
       const kitsuRes = await helper.malToKitsu(this.malId, this.type);
       try {
-        this.kitsuId = kitsuRes.data[0].relationships.item.data.id;
+        const relation = kitsuRes.data.find(
+          item => item.relationships.item.data.type === this.type,
+        );
+        if (!relation) throw new NotFoundError(`No entry found for malId ${this.malId}`);
+        this.kitsuId = Number(relation.relationships.item.data.id);
         kitsuRes.included.forEach(el => {
-          if (el.id === this.kitsuId) {
+          if (Number(el.id) === this.kitsuId) {
             this.kitsuSlug = el.attributes.slug;
           }
         });
-        if (!this.kitsuSlug) throw 'No slug';
+        if (!this.kitsuSlug) throw new NotFoundError(`No slug found for ${this.kitsuId}`);
       } catch (e) {
         throw new NotFoundError(e.message);
       }
     }
     return this.apiCall(
       'GET',
-      `https://kitsu.io/api/edge/${this.type}?filter[slug]=${this.kitsuSlug}&include=characters.character,mediaRelationships.destination,categories&fields[categories]=slug,title&nsfw=true`,
+      `https://kitsu.app/api/edge/${this.type}?filter[slug]=${this.kitsuSlug}&include=characters.character,mediaRelationships.destination,categories&fields[categories]=slug,title&nsfw=true`,
       {},
       true,
     ).then(res => {
       try {
         res.data = res.data[0];
-        // eslint-disable-next-line no-unused-expressions
+        // eslint-disable-next-line no-unused-expressions, @typescript-eslint/no-unused-expressions
         res.data.attributes.slug;
       } catch (e) {
         throw new NotFoundError(e.message);
@@ -155,25 +160,25 @@ export class MetaOverview extends MetaOverviewAbstract {
   private statistics() {
     if (this.animeI().attributes.averageRating !== null)
       this.meta.statistics.push({
-        title: 'Score:',
+        title: api.storage.lang('overview_sidebar_Score'),
         body: this.animeI().attributes.averageRating,
       });
 
     if (this.animeI().attributes.ratingRank !== null)
       this.meta.statistics.push({
-        title: 'Ranked:',
+        title: api.storage.lang('overview_sidebar_Ranked'),
         body: `#${this.animeI().attributes.ratingRank}`,
       });
 
     if (this.animeI().attributes.popularityRank !== null)
       this.meta.statistics.push({
-        title: 'Popularity:',
+        title: api.storage.lang('overview_sidebar_Popularity'),
         body: `#${this.animeI().attributes.popularityRank}`,
       });
 
     if (this.animeI().attributes.userCount !== null)
       this.meta.statistics.push({
-        title: 'Members:',
+        title: api.storage.lang('overview_sidebar_Members'),
         body: this.animeI().attributes.userCount,
       });
   }
@@ -186,7 +191,7 @@ export class MetaOverview extends MetaOverviewAbstract {
       let format = this.animeI().attributes.subtype.toLowerCase().replace('_', ' ');
       format = format.charAt(0).toUpperCase() + format.slice(1);
       this.meta.info.push({
-        title: 'Format:',
+        title: api.storage.lang('overview_sidebar_Format'),
         body: [{ text: format }],
       });
     }
@@ -196,7 +201,7 @@ export class MetaOverview extends MetaOverviewAbstract {
       this.animeI().attributes.episodeCount !== null
     )
       this.meta.info.push({
-        title: 'Episodes:',
+        title: api.storage.lang('overview_sidebar_Episodes'),
         body: [{ text: this.animeI().attributes.episodeCount }],
       });
 
@@ -205,8 +210,12 @@ export class MetaOverview extends MetaOverviewAbstract {
       this.animeI().attributes.episodeLength !== null
     )
       this.meta.info.push({
-        title: 'Episode Duration:',
-        body: [{ text: `${this.animeI().attributes.episodeLength} mins` }],
+        title: api.storage.lang('overview_sidebar_Duration'),
+        body: [
+          {
+            text: `${new IntlDuration().setRelativeTime(this.animeI().attributes.episodeLength, 'minutes', 'Duration').getRelativeText()}`,
+          },
+        ],
       });
 
     if (
@@ -216,27 +225,29 @@ export class MetaOverview extends MetaOverviewAbstract {
       let status = this.animeI().attributes.status.toLowerCase().replace('_', ' ');
       status = status.charAt(0).toUpperCase() + status.slice(1);
       this.meta.info.push({
-        title: 'Status:',
+        title: api.storage.lang('overview_sidebar_Status'),
         body: [{ text: status }],
       });
     }
 
-    if (
-      typeof this.animeI().attributes.startDate !== 'undefined' &&
-      this.animeI().attributes.startDate !== null
-    )
+    if (this.animeI().attributes.startDate)
       this.meta.info.push({
-        title: 'Start Date:',
-        body: [{ text: this.animeI().attributes.startDate }],
+        title: api.storage.lang('overview_sidebar_Start_Date'),
+        body: [
+          {
+            text: new IntlDateTime(this.animeI().attributes.startDate).getDateTimeText(),
+          },
+        ],
       });
 
-    if (
-      typeof this.animeI().attributes.endDate !== 'undefined' &&
-      this.animeI().attributes.endDate !== null
-    )
+    if (this.animeI().attributes.endDate)
       this.meta.info.push({
-        title: 'Start Date:',
-        body: [{ text: this.animeI().attributes.endDate }],
+        title: api.storage.lang('overview_sidebar_End_Date'),
+        body: [
+          {
+            text: new IntlDateTime(this.animeI().attributes.endDate).getDateTimeText(),
+          },
+        ],
       });
 
     const genres: any[] = [];
@@ -245,14 +256,14 @@ export class MetaOverview extends MetaOverviewAbstract {
         if (i.type === 'categories' && genres.length < 6) {
           genres.push({
             text: i.attributes.title,
-            url: `https://kitsu.io/${this.type}?categories=${i.attributes.slug}`,
+            url: `https://kitsu.app/${this.type}?categories=${i.attributes.slug}`,
           });
         }
       });
     }
     if (genres.length)
       this.meta.info.push({
-        title: 'Genres:',
+        title: api.storage.lang('overview_sidebar_Genres'),
         body: genres,
       });
 
@@ -261,17 +272,18 @@ export class MetaOverview extends MetaOverviewAbstract {
       this.animeI().attributes.ageRating !== null
     )
       this.meta.info.push({
-        title: 'Rating:',
+        title: api.storage.lang('overview_sidebar_Rating'),
         body: [{ text: this.animeI().attributes.ageRating }],
       });
 
-    if (
-      typeof this.animeI().attributes.totalLength !== 'undefined' &&
-      this.animeI().attributes.totalLength !== null
-    )
+    if (this.animeI().attributes.totalLength)
       this.meta.info.push({
-        title: 'Total playtime:',
-        body: [{ text: `${this.animeI().attributes.totalLength} mins` }],
+        title: api.storage.lang('overview_sidebar_Total_Playtime'),
+        body: [
+          {
+            text: `${new IntlDuration().setRelativeTime(this.animeI().attributes.totalLength, 'minutes', 'Duration').getRelativeText()}`,
+          },
+        ],
       });
   }
 
@@ -282,7 +294,7 @@ export class MetaOverview extends MetaOverviewAbstract {
       this.animeInfo.included.forEach(function (i) {
         if (i.type === 'manga' || i.type === 'anime') {
           an[i.id] = {
-            url: `https://kitsu.io/${i.type}/${i.attributes.slug}`,
+            url: `https://kitsu.app/${i.type}/${i.attributes.slug}`,
             title: helper.getTitle(i.attributes.titles, i.attributes.canonicalTitle),
             id: i.id,
             type: i.type,

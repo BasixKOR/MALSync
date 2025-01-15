@@ -7,6 +7,23 @@ import SettingsGroup from './settings-group.vue';
 import SettingsHr from './settings-hr.vue';
 import { localStore } from '../../../utils/localStore';
 
+export function providerOptions(mode: 'default' | 'secondary' | 'short' = 'default') {
+  const options = [
+    { title: 'MyAnimeList', value: 'MAL' },
+    { title: 'AniList', value: 'ANILIST' },
+    { title: 'Kitsu', value: 'KITSU' },
+    { title: 'Simkl', value: 'SIMKL' },
+    { title: 'Shikimori', value: 'SHIKI' },
+    { title: 'MyAnimeList (API) [WORSE]', value: 'MALAPI' },
+  ];
+  const modeTypes = {
+    default: ['MAL', 'ANILIST', 'KITSU', 'SIMKL', 'SHIKI', 'MALAPI'],
+    secondary: ['MAL', 'ANILIST', 'KITSU'],
+    short: ['MAL', 'ANILIST', 'KITSU', 'SIMKL', 'SHIKI'],
+  };
+  return options.filter(o => modeTypes[mode].includes(o.value));
+}
+
 export const trackingSimple: ConfObj[] = [
   {
     key: 'login',
@@ -33,14 +50,7 @@ export const trackingSimple: ConfObj[] = [
       component: 'dropdown',
       option: 'syncMode',
       props: {
-        options: [
-          { title: 'MyAnimeList', value: 'MAL' },
-          { title: 'AniList', value: 'ANILIST' },
-          { title: 'Kitsu', value: 'KITSU' },
-          { title: 'Simkl', value: 'SIMKL' },
-          { title: 'Shikimori', value: 'SHIKI' },
-          { title: 'MyAnimeList (API) [WORSE]', value: 'MALAPI' },
-        ],
+        options: providerOptions('default'),
       },
     },
     component: SettingsGeneral,
@@ -54,11 +64,7 @@ export const trackingSimple: ConfObj[] = [
       component: 'dropdown',
       option: 'syncModeSimkl',
       props: {
-        options: [
-          { title: 'MyAnimeList API', value: 'MAL' },
-          { title: 'AniList', value: 'ANILIST' },
-          { title: 'Kitsu', value: 'KITSU' },
-        ],
+        options: providerOptions('secondary'),
       },
     },
     component: SettingsGeneral,
@@ -96,6 +102,30 @@ export const tracking: ConfObj[] = [
         ],
       },
     }),
+    component: SettingsGeneral,
+  },
+  {
+    key: 'askBefore',
+    title: () => api.storage.lang('settings_AskBefore'),
+    props: {
+      component: 'checkbox',
+      option: 'askBefore',
+    },
+    component: SettingsGeneral,
+  },
+  {
+    key: 'forceEnglishTitles',
+    title: () => api.storage.lang('settings_ForceEnglishTitles'),
+    condition: () =>
+      api.settings.get('syncMode') === 'MAL' || api.settings.get('syncMode') === 'MALAPI',
+    props: {
+      component: 'checkbox',
+      option: 'forceEnglishTitles',
+    },
+    change: () => {
+      utils.clearCache();
+      if (api.type === 'webextension') localStore.clear();
+    },
     component: SettingsGeneral,
   },
   {
@@ -201,7 +231,7 @@ export const tracking: ConfObj[] = [
   },
   {
     key: 'localSyncExport',
-    title: 'Local Sync Export',
+    title: () => api.storage.lang('settings_LocalSync_Label'),
     condition: () => api.settings.get('localSync'),
     component: SettingsLocalSyncExport,
   },

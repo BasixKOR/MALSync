@@ -2,11 +2,14 @@ import { Single as KitsuSingle } from '../_provider/Kitsu/single';
 import { UserList } from '../_provider/Kitsu/list';
 import { activeLinks, removeFromOptions } from '../utils/quicklinksBuilder';
 import { waitForPageToBeVisible } from '../utils/general';
+import { NotAutenticatedError } from '../_provider/Errors';
 
 export class KitsuClass {
   page: any = null;
 
   same = false;
+
+  protected authError = false;
 
   constructor(public url: string) {
     let oldUrl = window.location.href.split('/').slice(0, 5).join('/');
@@ -128,7 +131,7 @@ export class KitsuClass {
         $('#mal-sync-login #mal-sync-button').attr('disabled', 'disabled');
         $.ajax({
           type: 'POST',
-          url: 'https://kitsu.io/api/oauth/token',
+          url: 'https://kitsu.app/api/oauth/token',
           data: `grant_type=password&username=${encodeURIComponent(
             String($('#mal-sync-login #email').val()),
           )}&password=${encodeURIComponent(String($('#mal-sync-login #pass').val()))}`,
@@ -308,7 +311,7 @@ export class KitsuClass {
       .first()
       .append(
         j.html(
-          `<div class="malsync-rel-link" style="display: inline-block; margin: 0 5px; vertical-align: bottom;"></div>`,
+          '<div class="malsync-rel-link" style="display: inline-block; margin: 0 5px; vertical-align: bottom;"></div>',
         ),
       );
 
@@ -329,6 +332,7 @@ export class KitsuClass {
   private tempMangalist: any = null;
 
   bookmarks() {
+    if (this.authError) return;
     const This = this;
     $(document).ready(() => {
       if (this.page!.type === 'anime') {
@@ -354,6 +358,7 @@ export class KitsuClass {
           fullListCallback(list);
         })
         .catch(e => {
+          if (e instanceof NotAutenticatedError) this.authError = true;
           con.error(e);
           listProvider.flashmError(e);
         });

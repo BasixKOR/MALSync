@@ -1,32 +1,64 @@
 <template>
   <Section spacer="full">
     <ImageText :image="profileRequest.data?.picture" :href="profileRequest.data?.href">
-      <template v-if="state === 'auth'">
+      <template v-if="profileRequest.error">
+        <Header> Error </Header>
+        <div>
+          <Link :to="{ name: 'Settings', params: { path: ['tracking', 'syncMode'] } }">
+            <TextIcon icon="keyboard_arrow_down" position="after" mode="flex">
+              {{ parameters.listObj.name }}
+            </TextIcon>
+          </Link>
+        </div>
+        <div>{{ profileRequest.error }}</div>
+      </template>
+      <template v-else-if="state === 'auth'">
         <Header>
           <MediaLink :href="profileRequest.data?.href">
             {{ profileRequest.data.username }}
           </MediaLink>
         </Header>
-        <div>{{ lang('settings_profile_logged_via', [parameters.listObj.name]) }}</div>
+        <div style="width: fit-content">
+          <Link :to="{ name: 'Settings', params: { path: ['tracking', 'syncMode'] } }">
+            <TextIcon icon="keyboard_arrow_down" position="after" mode="flex">
+              {{ lang('settings_profile_logged_via', [parameters.listObj.name]) }}
+            </TextIcon>
+          </Link>
+        </div>
         <div class="link-hover" @click="deauth()">
           <TextIcon icon="eject" position="after" mode="flex">
             {{ lang('settings_profile_logout') }}
           </TextIcon>
         </div>
       </template>
-      <template v-if="state === 'loading'">
+      <template v-else-if="state === 'loading'">
         <Header> {{ lang('Loading') }} </Header>
-        <div>{{ parameters.listObj.name }}</div>
+        <div>
+          <Link :to="{ name: 'Settings', params: { path: ['tracking', 'syncMode'] } }">
+            <TextIcon icon="keyboard_arrow_down" position="after" mode="flex">
+              {{ parameters.listObj.name }}
+            </TextIcon>
+          </Link>
+        </div>
         <div>--</div>
       </template>
-      <template v-if="state === 'noAuth'">
+      <template v-else-if="state === 'noAuth'">
         <Header>{{ lang('settings_profile_no_login') }}</Header>
-        <div class="link-hover" @click="profileRequest.execute()">
-          <TextIcon icon="sync">{{ lang('settings_profile_check') }}</TextIcon>
+        <div>
+          <Link :to="{ name: 'Settings', params: { path: ['tracking', 'syncMode'] } }">
+            <TextIcon icon="keyboard_arrow_down" position="after" mode="flex">
+              {{ parameters.listObj.name }}
+            </TextIcon>
+          </Link>
         </div>
-        <MediaLink :href="parameters.listObj.authenticationUrl">
-          <TextIcon icon="login" class="link-hover">{{ lang('settings_Authenticate') }}</TextIcon>
-        </MediaLink>
+        <div class="button-flex">
+          <div class="link-hover" @click="profileRequest.execute()">
+            <TextIcon icon="sync">{{ lang('settings_profile_check') }}</TextIcon>
+          </div>
+          <MediaLink :href="parameters.listObj.authenticationUrl">
+            <TextIcon icon="login" class="link-hover">{{ lang('settings_Authenticate') }}</TextIcon>
+          </MediaLink>
+        </div>
       </template>
     </ImageText>
   </Section>
@@ -42,6 +74,7 @@ import { NotAutenticatedError } from '../../../_provider/Errors';
 import MediaLink from '../media-link.vue';
 import TextIcon from '../text-icon.vue';
 import Section from '../section.vue';
+import Link from '../link.vue';
 
 defineProps({
   title: {
@@ -103,5 +136,11 @@ const state = computed(() => {
   .link();
 
   color: var(--cl-light-text);
+  width: fit-content;
+}
+
+.button-flex {
+  display: flex;
+  gap: 15px;
 }
 </style>

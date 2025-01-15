@@ -1,8 +1,6 @@
 import { expect } from 'chai';
-import * as request from 'request';
 import { Single } from '../../../../src/_provider/Local/single';
 import * as utils from '../../../../src/utils/general';
-import * as def from '../../../../src/_provider/definitions';
 
 import { generalSingleTests } from '../generalSingleTests.exclude';
 
@@ -69,7 +67,7 @@ function setGlobals() {
         type: 'anime',
       },
       {
-        url: 'https://kitsu.io/anime/no-game-no-life',
+        url: 'https://kitsu.app/anime/no-game-no-life',
         error: true,
         type: 'anime',
       },

@@ -80,7 +80,9 @@ const closeWindow = () => {
   padding: 0 @spacer;
   top: -20px;
   z-index: 10;
-  transition: box-shadow 0.1s, background-color 0.1s;
+  transition:
+    box-shadow 0.1s,
+    background-color 0.1s;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
   background-color: var(--cl-background);
@@ -108,7 +110,7 @@ const closeWindow = () => {
     &.close-fix {
       font-size: 38px;
       position: relative;
-      left: -4px;
+      inset-inline-start: -4px;
     }
   }
 

@@ -4,44 +4,43 @@
     <Section class="image-section real">
       <OverviewImage
         class="image"
-        :single="(singleRequest.data as null | SingleAbstract)"
+        :single="singleRequest.data as null | SingleAbstract"
         :src="metaRequest.data?.imageLarge || singleRequest.data?.getImage() || ''"
         :loading="metaRequest.loading"
       />
     </Section>
     <div class="header-section">
       <Section spacer="half">
-        <Header
-          :loading="metaRequest.loading"
-          class="header-block"
-          :class="{
-            hasTitle:
-              metaRequest.data &&
-              metaRequest.data.alternativeTitle &&
-              metaRequest.data.alternativeTitle.length,
-          }"
-        >
-          <div class="statusDotSection">
-            <StateDot
-              class="dot"
-              :status="
-                !singleRequest.loading && singleRequest.data?.getStatus()
-                  ? singleRequest.data?.getStatus()
-                  : 0
-              "
-            />
-            <MediaLink
-              :force-link="true"
-              :href="singleRequest.data?.getDisplayUrl() || ''"
-              class="header-link"
-            >
-              <span class="material-icons">open_in_new</span>
-            </MediaLink>
-          </div>
-          <span @click="titleModal = true">
-            {{ metaRequest.data?.title || singleRequest.data?.getTitle() || '' }}
-          </span>
-        </Header>
+        <MediaLink :force-link="true" :href="singleRequest.data?.getDisplayUrl() || ''">
+          <Header
+            :loading="metaRequest.loading"
+            class="header-block"
+            :class="{
+              hasTitle:
+                metaRequest.data &&
+                metaRequest.data.alternativeTitle &&
+                metaRequest.data.alternativeTitle.length,
+            }"
+          >
+            <div class="statusDotSection">
+              <StateDot
+                class="dot"
+                :status="
+                  !singleRequest.loading && singleRequest.data?.getStatus()
+                    ? singleRequest.data?.getStatus()
+                    : 0
+                "
+              />
+              <span class="header-link material-icons">open_in_new</span>
+            </div>
+            <span class="header-title">
+              {{ metaRequest.data?.title || singleRequest.data?.getTitle() || '' }}
+              <PillDark class="header-synonyms" @click.prevent="titleModal = true">
+                {{ lang('overview_synonyms') }}
+              </PillDark>
+            </span>
+          </Header>
+        </MediaLink>
         <Modal
           v-if="
             metaRequest.data &&
@@ -78,6 +77,7 @@
           <div
             v-dompurify-html="cleanDescription"
             class="description-html"
+            dir="auto"
             :class="{ preLine: !cleanDescription.includes('<br') }"
           />
         </Description>
@@ -86,7 +86,7 @@
     <HR v-if="breakpoint === 'desktop' || !totalLoading" class="header-split" />
     <Section v-if="breakpoint === 'desktop' || !totalLoading" class="update-section">
       <OverviewUpdateUi
-        :single="(singleRequest.data as null | SingleAbstract)"
+        :single="singleRequest.data as null | SingleAbstract"
         :loading="totalLoading || singleRequest.loading"
         :type="props.type"
       />
@@ -115,15 +115,31 @@
           </Section>
           <HR />
         </template>
-        <template v-if="singleRequest.data?.getMalUrl()">
+        <template
+          v-if="
+            (metaRequest.data!.reviews && metaRequest.data!.reviews.length) ||
+            singleRequest.data?.getMalUrl()
+          "
+        >
           <Section>
-            <OverviewReviews :mal-url="singleRequest.data!.getMalUrl()!" />
+            <OverviewReviews
+              :reviews="metaRequest.data!.reviews"
+              :mal-url="singleRequest.data ? singleRequest.data!.getMalUrl()! : ''"
+            />
           </Section>
           <HR />
         </template>
-        <template v-if="singleRequest.data?.getMalUrl()">
+        <template
+          v-if="
+            (metaRequest.data!.recommendations && metaRequest.data!.recommendations.length) ||
+            singleRequest.data?.getMalUrl()
+          "
+        >
           <Section>
-            <OverviewRecommendations :mal-url="singleRequest.data!.getMalUrl()!" />
+            <OverviewRecommendations
+              :recommendations="metaRequest.data!.recommendations"
+              :mal-url="singleRequest.data ? singleRequest.data!.getMalUrl()! : ''"
+            />
           </Section>
         </template>
       </Section>
@@ -135,7 +151,7 @@
       >
         <OverviewInfo
           :info="metaRequest.data!.info"
-          :single="(singleRequest.data as null | SingleAbstract)"
+          :single="singleRequest.data as null | SingleAbstract"
         />
       </Section>
     </template>
@@ -166,8 +182,10 @@ import HR from '../components/hr.vue';
 import { NotFoundError, UrlNotSupportedError } from '../../_provider/Errors';
 import { getSingle } from '../../_provider/singleFactory';
 import MediaLink from '../components/media-link.vue';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
 import { SingleAbstract } from '../../_provider/singleAbstract';
 import ErrorMeta from '../components/error/error-meta.vue';
+import PillDark from '../components/pill-dark.vue';
 
 const breakpoint = inject('breakpoint');
 
@@ -293,8 +311,23 @@ const totalLoading = computed(() => {
 
     .header-link {
       display: none;
-      margin-right: 0.5em;
+      margin-inline-end: 0.5em;
       color: var(--cl-secondary);
+    }
+
+    .header-title {
+      position: relative;
+      width: 100%;
+
+      .header-synonyms {
+        display: none;
+        font-size: var(--base-font-size);
+        font-weight: normal;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        inset-inline-end: 0;
+      }
     }
 
     &.hasTitle {
@@ -310,6 +343,10 @@ const totalLoading = computed(() => {
         position: relative;
         max-width: 16px;
         left: -3px;
+      }
+
+      .header-synonyms {
+        display: block;
       }
     }
   }
@@ -380,6 +417,7 @@ const totalLoading = computed(() => {
     }
 
     .additional-content {
+      overflow: hidden;
       grid-column-start: 2;
       grid-row-start: 4;
       grid-row-end: 7;

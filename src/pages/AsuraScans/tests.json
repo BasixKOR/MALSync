@@ -3,26 +3,26 @@
   "url": "https://asura.gg",
   "testCases": [
     {
-      "url": "https://asura.gg/sss-class-suicide-hunter-chapter-18/",
+      "url": "https://asuracomic.net/series/infinite-mage-4aa4b318/chapter/18",
       "expected": {
         "sync": true,
-        "title": "SSS-Class Suicide Hunter",
-        "identifier": "sss-class-suicide-hunter",
-        "overviewUrl": "https://asura.gg/manga/sss-class-suicide-hunter/",
-        "nextEpUrl": "https://asura.gg/sss-class-suicide-hunter-chapter-19/",
+        "title": "Infinite Mage",
+        "identifier": "infinite-mage",
+        "overviewUrl": "https://asuracomic.net/series/infinite-mage-4aa4b318",
+        "nextEpUrl": "https://asuracomic.net/series/infinite-mage-4aa4b318/chapter/19",
         "episode": 18,
         "uiSelector": false
       }
     },
     {
-      "url": "https://asura.gg/manga/sss-class-suicide-hunter/",
+      "url": "https://asuracomic.net/series/infinite-mage-4aa4b318",
       "expected": {
         "sync": false,
-        "title": "SSS-Class Suicide Hunter",
-        "identifier": "sss-class-suicide-hunter",
+        "title": "Infinite Mage",
+        "identifier": "infinite-mage",
         "uiSelector": true,
         "epList": {
-          "25": "https://asura.gg/sss-class-suicide-hunter-chapter-25/"
+          "25": "https://asuracomic.net/series/infinite-mage-4aa4b318/chapter/25"
         }
       }
     }

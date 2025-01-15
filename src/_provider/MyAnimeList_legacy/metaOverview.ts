@@ -1,5 +1,7 @@
 import { MetaOverviewAbstract } from '../metaOverviewAbstract';
 import { UrlNotSupportedError } from '../Errors';
+import { dateFromTimezoneToTimezone, getWeektime } from '../../utils/time';
+import { IntlDateTime, IntlDuration, IntlRange } from '../../utils/IntlWrapper';
 
 export class MetaOverview extends MetaOverviewAbstract {
   constructor(url) {
@@ -47,13 +49,26 @@ export class MetaOverview extends MetaOverviewAbstract {
 
   private title(data) {
     let title = '';
+
+    const useAltTitle = api.settings.get('forceEnglishTitles');
+
     try {
-      title = data
-        .split('itemprop="name">')[1]
-        .split('</')[0]
-        .split('<br')[0]
-        .replace(/&quot;/g, '"')
-        .replace(/&#039;/g, "'");
+      if (useAltTitle) {
+        title = data
+          .split('class="title-english')[1]
+          .split('>')[1]
+          .split('</')[0]
+          .split('<br')[0]
+          .replace(/&quot;/g, '"')
+          .replace(/&#039;/g, "'");
+      } else {
+        title = data
+          .split('itemprop="name">')[1]
+          .split('</')[0]
+          .split('<br')[0]
+          .replace(/&quot;/g, '"')
+          .replace(/&#039;/g, "'");
+      }
     } catch (e) {
       console.log('[iframeOverview] Error:', e);
     }
@@ -145,7 +160,7 @@ export class MetaOverview extends MetaOverviewAbstract {
       const statsBlock = data.split('<h2>Statistics</h2>')[1].split('<h2>')[0];
       // @ts-ignore
       const tempHtml = j.$.parseHTML(statsBlock);
-
+      const This = this;
       j.$.each(j.$(tempHtml).filter('div').slice(0, 5), function (index, value) {
         const title = j.$(value).find('.dark_text').text();
         const body =
@@ -153,7 +168,7 @@ export class MetaOverview extends MetaOverviewAbstract {
             ? j.$(value).find('span[itemprop=ratingValue]').text()
             : j.$(value).clone().children().remove().end().text();
         stats.push({
-          title,
+          title: This.translateTitle(title),
           body: body.trim(),
         });
       });
@@ -169,10 +184,9 @@ export class MetaOverview extends MetaOverviewAbstract {
       const infoBlock = data.split('<h2>Information</h2>')[1].split('<h2>')[0];
       const infoData = j.$.parseHTML(infoBlock);
       j.$.each(j.$(infoData).filter('div'), (index, value) => {
-        const title = j.$(value).find('.dark_text').text();
+        let title = j.$(value).find('.dark_text').text();
         j.$(value).find('.dark_text').remove();
 
-        // @ts-ignore
         const aTags: { text: string; url: string; subtext?: string }[] = j
           .$(value)
           .find('a')
@@ -181,7 +195,8 @@ export class MetaOverview extends MetaOverviewAbstract {
               text: j.$(el).text().trim(),
               url: utils.absoluteLink(j.$(el).attr('href'), 'https://myanimelist.net'),
             };
-          });
+          })
+          .toArray();
 
         j.$(value).find('a, span').remove();
 
@@ -191,22 +206,85 @@ export class MetaOverview extends MetaOverviewAbstract {
 
         if (!aTags.length) {
           body = textTags.map(el => {
+            const match = el.match(/(\w+)\s+at\s+(\d{2}:\d{2})\s+\(JST\)/i);
+
+            if (match) {
+              const dayString = match[1];
+              const timeString = match[2];
+
+              const weekDate = getWeektime(dayString, timeString);
+              if (weekDate) {
+                const broadcastDate = dateFromTimezoneToTimezone(weekDate, 'Asia/Tokyo');
+                return {
+                  date: broadcastDate,
+                  type: 'weektime',
+                };
+              }
+            }
+
             return {
-              text: el,
+              text: el.trim(),
             };
           });
         } else if (aTags.length === textTags.length) {
-          body = aTags.map((i, el) => {
-            // @ts-ignore
-            el.subtext = textTags[i].trim();
+          body = aTags.map((el, i) => {
+            el.subtext = textTags[i]
+              .trim()
+              .replace(/(^\(|\)$)/gi, '')
+              .trim();
             return el;
           });
         } else {
           body = aTags;
         }
-
+        switch (title.trim()) {
+          case 'Published:':
+          case 'Aired:': {
+            title =
+              title === 'Published:'
+                ? api.storage.lang('overview_sidebar_Published')
+                : api.storage.lang('overview_sidebar_Aired');
+            const range = body.map(e => e.text.toString()).toString();
+            // NOTE - For anime/continuous aired titles with start and end date
+            if (range.includes(' to ')) {
+              const start = range.split('to')[0].trim();
+              const end = range.split('to')[1].trim();
+              const rangeDate = new IntlRange(start, end).getDateTimeRangeText();
+              body = [{ text: rangeDate }];
+              break;
+            }
+            // NOTE - For movies/titles with only 1 air date
+            body = [{ text: `${new IntlDateTime(range).getDateTimeText()}` }];
+            break;
+          }
+          case 'Duration:': {
+            title = api.storage.lang('overview_sidebar_Duration');
+            const durationString: string = body[0].text;
+            const match = durationString.match(/\d+/g);
+            // NOTE - For anime with episodes
+            if (match) {
+              if (durationString.includes('min') && match.length === 1) {
+                const minutes = Number(match[0]);
+                const result = new IntlDuration()
+                  .setDurationFormatted({ minutes })
+                  .getRelativeText();
+                body = [{ text: `${result}` }];
+                break;
+              }
+              // NOTE - For movies with total duration
+              const hours = Number(match[0]) || 0;
+              const minutes = Number(match[1]) || 0;
+              const result = new IntlDuration().setDuration({ hours, minutes }).getRelativeText();
+              body = [{ text: `${result}` }];
+              break;
+            }
+          }
+          default:
+            break;
+        }
+        title = this.translateTitle(title);
         html.push({
-          title: title.trim(),
+          title,
           body,
         });
       });
@@ -215,6 +293,12 @@ export class MetaOverview extends MetaOverviewAbstract {
       console.log('[iframeOverview] Error:', e);
     }
     this.meta.info = html;
+  }
+
+  translateTitle(title: string) {
+    const clearTitle = title.replace(':', '').trim();
+    const titleTranslated = api.storage.lang(`overview_sidebar_${clearTitle}`);
+    return titleTranslated || title;
   }
 
   getExternalLinks(html, data) {
@@ -231,7 +315,7 @@ export class MetaOverview extends MetaOverviewAbstract {
       });
       if (body.length) {
         html.push({
-          title: 'External Links',
+          title: `${api.storage.lang('overview_sidebar_external_links')}`,
           body,
         });
       }
@@ -338,7 +422,39 @@ export class MetaOverview extends MetaOverviewAbstract {
     try {
       const relatedBlock = data.split('Related ')[1].split('</h2>')[1].split('<h2>')[0];
       const related = j.$.parseHTML(relatedBlock);
-      j.$.each(j.$(related).filter('table').find('tr'), function (index, value) {
+
+      j.$.each(
+        j.$(related).filter('.related-entries').find('.entry .content'),
+        function (index, value) {
+          const links: { url: string; title: string; type: string; id: number }[] = [];
+          j.$(value)
+            .find('a')
+            .each(function (indexB, valueB) {
+              const url =
+                utils.absoluteLink(j.$(valueB).attr('href'), 'https://myanimelist.net') || '';
+              if (url) {
+                links.push({
+                  url,
+                  title: j.$(valueB).parent().text(),
+                  type: utils.urlPart(url, 3),
+                  id: Number(utils.urlPart(url, 4)),
+                });
+              }
+            });
+          el.push({
+            type: j
+              .$(value)
+              .find('.relation')
+              .first()
+              .text()
+              .trim()
+              .replace(/\(.*\)$/gi, ''),
+            links,
+          });
+        },
+      );
+
+      j.$.each(j.$(related).filter('.related-entries').find('table tr'), function (index, value) {
         const links: { url: string; title: string; type: string; id: number }[] = [];
         j.$(value)
           .find('.borderClass')
@@ -350,7 +466,7 @@ export class MetaOverview extends MetaOverviewAbstract {
             if (url) {
               links.push({
                 url,
-                title: j.$(valueB).text(),
+                title: j.$(valueB).parent().text(),
                 type: utils.urlPart(url, 3),
                 id: Number(utils.urlPart(url, 4)),
               });

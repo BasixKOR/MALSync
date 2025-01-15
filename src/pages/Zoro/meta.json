@@ -1,6 +1,14 @@
 {
-  "search": "https://zoro.to/search?keyword={searchtermPlus}",
+  "search": "https://hianime.to/search?keyword={searchtermPlus}",
   "urls": {
-    "match": ["*://zoro.to/*"]
+    "match": [
+      "*://aniwatch.to/*",
+      "*://aniwatch.nz/*",
+      "*://aniwatch.se/*",
+      "*://hianime.to/*",
+      "*://hianime.nz/*",
+      "*://hianime.mn/*",
+      "*://hianime.sx/*"
+    ]
   }
 }

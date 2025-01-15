@@ -13,6 +13,8 @@ import { video } from './settings-structure-video';
 import { minimal } from './settings-structure-minimal';
 import { estimation } from './settings-structure-estimation';
 import { links } from './settings-structure-links';
+import { notifications } from './settings-structure-notifications';
+import { missingGeneralPermissions, permissionsOverview } from './settings-structure-permissions';
 
 export const structure: ConfObj[] = [
   {
@@ -21,6 +23,7 @@ export const structure: ConfObj[] = [
     component: SettingsProfile,
   },
   missingPermissions,
+  missingGeneralPermissions,
   {
     key: 'tracking',
     title: () => api.storage.lang('settings_tracking'),
@@ -83,6 +86,25 @@ export const structure: ConfObj[] = [
     },
     component: SettingsGroup,
     children: estimation,
+  },
+  {
+    key: 'notifiactionSection',
+    title: () => api.storage.lang('settings_Notifications'),
+    props: {
+      icon: 'notifications',
+    },
+    component: SettingsGroup,
+    children: notifications,
+  },
+  {
+    key: 'permissions-overview',
+    title: () => api.storage.lang('settings_permissions_overview'),
+    system: 'webextension',
+    props: {
+      icon: 'lock_open',
+    },
+    component: SettingsGroup,
+    children: permissionsOverview,
   },
   {
     key: 'customDomains',

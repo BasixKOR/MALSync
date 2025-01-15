@@ -2,7 +2,7 @@ import { collectorConfig, executeCollector } from './ModeFactory';
 import { Cache } from '../Cache';
 
 export type mangaProgressConfig = {
-  condition?: string;
+  condition?: string | (() => boolean);
   current: collectorConfig;
   total: collectorConfig;
 };
@@ -58,7 +58,10 @@ export class MangaProgress {
   protected applyConfig() {
     for (const key in this.configs) {
       const config = this.configs[key];
-      if (config.condition && !j.$(config.condition).length) continue;
+      if (typeof config.condition !== 'undefined') {
+        if (typeof config.condition === 'function' && config.condition() === false) continue;
+        if (typeof config.condition === 'string' && !j.$(config.condition).length) continue;
+      }
       try {
         return this.getProgressFromCollectors(config);
       } catch (e) {
@@ -155,13 +158,13 @@ export class MangaProgress {
       res = await cacheObj.getValue();
     } else {
       const url = `https://api.malsync.moe/static/reader/${this.page}`;
-      const request = await api.request.xhr('GET', url).then(async response => {
+      res = await api.request.xhr('GET', url).then(async response => {
         if (response.status === 200 && response.responseText) {
           return JSON.parse(response.responseText);
         }
         return null;
       });
-      await cacheObj.setValue(request);
+      await cacheObj.setValue(res);
     }
 
     if (res) {

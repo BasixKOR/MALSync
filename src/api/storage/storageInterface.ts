@@ -5,7 +5,7 @@ export interface storageInterface {
 
   remove(key: string): Promise<void>;
 
-  list(from?: string): Promise<any[]>;
+  list(from?: string): Promise<{ [key: string]: any }>;
 
   addStyle(css: string): Promise<void>;
 
@@ -13,11 +13,15 @@ export interface storageInterface {
 
   lang(selector, args?: string[]): string;
 
+  langDirection(): 'ltr' | 'rtl';
+
   assetUrl(filename: string): string;
 
   injectCssResource(res: string, head, code?: string | null): void;
 
   injectjsResource(res: string, head): void;
+
+  addProxyScriptToTag(tag: HTMLScriptElement, name: string): HTMLScriptElement;
 
   updateDom(head): void;
 

@@ -2,6 +2,8 @@ const webpack = require('webpack');
 const path = require('path');
 const { VueLoaderPlugin } = require('vue-loader');
 
+const { getKeys } = require('./utils/keys');
+
 module.exports = {
   entry: {
     index: path.join(__dirname, '..', 'test/index.ts'),
@@ -53,9 +55,9 @@ module.exports = {
       api: path.resolve(__dirname, './../src/api/webextension'),
     }),
     new webpack.DefinePlugin({
-      env: JSON.stringify({
-        CONTEXT: process.env.MODE === 'travis' ? 'production' : 'development',
-      }),
+      __VUE_OPTIONS_API__: true,
+      __VUE_PROD_DEVTOOLS__: false,
+      __MAL_SYNC_KEYS__: JSON.stringify(getKeys()),
     }),
   ],
 };

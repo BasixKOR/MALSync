@@ -516,12 +516,24 @@
         "description": "Search text"
     },
     "correction_NoMal": {
-        "message": "Anime/Manga kan niet worden gevonden op MAL",
-        "description": "Anime/Manga not found in MAL"
+        "message": "Anime/Manga kan niet worden gevonden op $page$",
+        "description": "Anime/Manga not found in MAL",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "MAL"
+            }
+        }
     },
     "correction_NoEntry": {
-        "message": "Geen resultaten op MAL",
-        "description": "No entry on MyAnimeList"
+        "message": "Geen resultaten op $page$",
+        "description": "No entry on MyAnimeList",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "MAL"
+            }
+        }
     },
     "correction_NewOffset": {
         "message": "Nieuwe Extra ($offset$) set.",
@@ -1021,39 +1033,9 @@
         "message": "Sta alstublieft de pop-ups toe voor deze website",
         "description": "Please allow pop-ups for this website"
     },
-    "minimalClass_versionMsg": {
-        "message": "Geüpdate naar de versie $Version$ $Link$CHANGELOG$LinkEnd$",
-        "description": "Update version",
-        "placeholders": {
-            "Version": {
-                "content": "$1",
-                "example": "0.1.4"
-            },
-            "Link": {
-                "content": "$2",
-                "example": "[<a>"
-            },
-            "LinkEnd": {
-                "content": "</a>]",
-                "example": "</a>]"
-            }
-        }
-    },
     "minimalClass_versionMsg_Text_1": {
         "message": "Bedankt voor het installeren van MAL-Sync",
         "description": "Update version - Text 1"
-    },
-    "minimalClass_versionMsg_Text_2": {
-        "message": "Heb je vragen?",
-        "description": "Update version - Text 2"
-    },
-    "minimalClass_versionMsg_Text_3": {
-        "message": "Open Source Code:",
-        "description": "Update version - Text 3"
-    },
-    "minimalClass_versionMsg_Text_4": {
-        "message": "uBlock gebruikers voeg dit alstublieft toe aan uw filter lijst! Dit voorkomt problemen zoals niet werkende afbeeldingen.",
-        "description": "Update version - Text 4"
     },
     "installPage_Mode": {
         "message": "Kies alstublieft welke Anime database u wilt gebruiken:",
@@ -1092,20 +1074,6 @@
     "installPage_Wrong_Description": {
         "message": "Je kunt gemakkelijk de relatie veranderen in het gif beneden. Een offset aflevering kan ook op die pagina worden gekozen.",
         "description": "Description of the wrong section on the install page"
-    },
-    "Anilist_Authenticate": {
-        "message": "Authentiseer $Link1$Here$link2$ alstublieft",
-        "description": "Update version - Text 3",
-        "placeholders": {
-            "Link1": {
-                "content": "<a target=\"_blank\" href=\"https://anilist.co/api/v2/oauth/authorize?client_id=1487&response_type=token\">",
-                "example": "<a>"
-            },
-            "Link2": {
-                "content": "</a>",
-                "example": "</a>"
-            }
-        }
     },
     "Emby_Authenticate": {
         "message": "MAL-Sync heeft een Emby API key nodig om te werken. Meer info $Link1$Here$Link2$",
@@ -1165,17 +1133,9 @@
         "message": "Check voor filler/samenvatting afleveringen",
         "description": "Option to enable filler checking"
     },
-    "settings_crash_report": {
-        "message": "Verzend crash rapportages",
-        "description": "If to send crash reports"
-    },
     "settings_filler_text": {
         "message": "Dit zal controleren of de aflevering is gemarkeerd voor filler/samenvatting op MyAnimeList",
         "description": "filler tooltip"
-    },
-    "settings_crash_report_text": {
-        "message": "Helpt om bugs te corrigeren. Geen gevoelige informatie zal worden verzonden.",
-        "description": "Crash report tooltip"
     },
     "filler_filler_confirm": {
         "message": "Deze aflevering is gemarkeerd als filler op MyAnimeList, wil je het overslaan?",
@@ -1188,5 +1148,9 @@
     "settings_custom_domains_position": {
         "message": "Positie",
         "description": "Position of the quicklinks"
+    },
+    "locale": {
+        "message": "nl",
+        "description": "Current locale"
     }
 }

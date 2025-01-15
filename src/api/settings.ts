@@ -4,9 +4,11 @@ export const settingsObj = {
   options: reactive({
     autoTrackingModeanime: 'video',
     readerTracking: true,
+    askBefore: true,
     autoTrackingModemanga: 'instant',
     enablePages: {},
     forceEn: false,
+    forceEnglishTitles: false,
     rpc: true,
     presenceLargeImage: 'cover',
     presenceShowButtons: true,
@@ -45,26 +47,22 @@ export const settingsObj = {
     loadPTWForProgress: false,
 
     quicklinks: [
-      '9anime',
       'Crunchyroll',
       'Gogoanime',
-      'Twistmoe',
       'Mangadex',
       'MangaNato',
       'MangaFox',
       'MangaSee',
-      'YugenAnime',
-      'Zoro',
-      'Funimation',
+      'MangaFire',
+      'HiAnime',
       'Hulu',
       'Netflix',
       'Hidive',
-      'Vrv',
       'VIZ',
       'MangaPlus',
       'MangaReader',
-      'marin',
       'ComicK',
+      'WeebCentral',
     ],
     quicklinksPosition: 'default',
 
@@ -87,6 +85,7 @@ export const settingsObj = {
     progressIntervalDefaultManga: 'en/sub',
     progressNotificationsAnime: true,
     progressNotificationsManga: true,
+    notificationsSticky: true,
 
     bookMarksList: false,
 
@@ -139,7 +138,7 @@ export const settingsObj = {
           const storageChange = changes[key];
           if (/^settings\//i.test(key)) {
             this.options[key.replace('settings/', '')] = storageChange.newValue;
-            con.info(`Update ${key} option to ${storageChange.newValue}`);
+            con.info(`Update ${key} option to ${JSON.stringify(storageChange.newValue, null, 2)}`);
           }
         }
       }

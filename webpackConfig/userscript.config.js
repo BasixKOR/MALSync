@@ -1,6 +1,8 @@
 const path = require('path');
+const fs = require('fs');
 const webpack = require('webpack');
 const wrapper = require('./utils/WrapperPlugin');
+const { getVirtualScript } = require('./utils/general');
 const package = require('../package.json');
 const generalUrls = require('./utils/pageUrls');
 const pages = require('./utils/pages').pagesUrls();
@@ -15,6 +17,7 @@ const pagesUtils = require('./utils/pages');
 const generateMatchExcludes = pagesUtils.generateMatchExcludes;
 
 const pageUrls = { ...generalUrls, ...pages };
+const { getKeys } = require('./utils/keys');
 
 const generateResources = () => {
   const resources = [];
@@ -81,6 +84,18 @@ const generateMetadataBlock = metadata => {
   return `// ==UserScript==\n${block}// ==/UserScript==\n\n` + `var i18n = ${JSON.stringify(i18n())};\n`;
 };
 
+const proxyScripts = [];
+pagesUtils.pages().forEach(page => {
+  pageRoot = path.join(__dirname, '..', 'src/pages/', page);
+  const scriptPath = `dist/webextension/content/proxy/proxy_${page}.js`;
+  if (fs.existsSync(path.join(pageRoot, 'proxy.ts'))) {
+    if (!fs.existsSync(path.join(__dirname, '..', scriptPath)))
+      throw new Error(`Proxy script for ${page} does not exist. Please build the extension first.`);
+    proxyScripts.push(`export const ${page} = require('./${scriptPath}?raw');`);
+  }
+});
+console.log('Proxy', proxyScripts);
+
 module.exports = {
   entry: {
     index: path.join(__dirname, '..', 'src/index.ts'),
@@ -109,6 +124,10 @@ module.exports = {
           shadowMode: true,
           exposeFilename: true,
         },
+      },
+      {
+        resourceQuery: /raw/,
+        type: 'asset/source',
       },
     ],
   },
@@ -140,11 +159,12 @@ module.exports = {
       utils: path.resolve(__dirname, './../src/utils/general'),
       j: path.resolve(__dirname, './../src/utils/j'),
       api: path.resolve(__dirname, './../src/api/userscript'),
+      proxyScripts: getVirtualScript('proxyScripts', proxyScripts.join('\n')),
     }),
     new webpack.DefinePlugin({
-      env: JSON.stringify({
-        CONTEXT: process.env.MODE === 'travis' ? 'production' : 'development',
-      }),
+      __VUE_OPTIONS_API__: true,
+      __VUE_PROD_DEVTOOLS__: false,
+      __MAL_SYNC_KEYS__: JSON.stringify(getKeys()),
     }),
     new webpack.optimize.LimitChunkCountPlugin({
       maxChunks: 1,

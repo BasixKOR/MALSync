@@ -1,42 +1,30 @@
 {
   "title": "AnimesOnline",
-  "url": "https://animesonline.org/",
-  "enabled": false,
+  "url": "https://www.animesonline.in/",
   "testCases": [
     {
-      "url": "https://animesonline.org/episodio/overlord-episodio-5/",
+      "url": "https://www.animesonline.in/anime/398a5cebfadb2606fbf802b42aad57755b4eae55",
       "expected": {
-        "sync": true,
-        "title": "Overlord",
-        "identifier": "overlord",
-        "overviewUrl": "https://animesonline.org/animes/overlord/",
-        "nextEpUrl": "https://animesonline.org/episodio/overlord-episodio-6/",
-        "episode": 5,
-        "uiSelector": false
+        "sync": false,
+        "title": "One Piece",
+        "identifier": "One Piece",
+        "uiSelector": true,
+        "epList": {
+          "1": "https://www.animesonline.in/video/346066",
+          "10": "https://www.animesonline.in/video/346030",
+          "17": "https://www.animesonline.in/video/346054"
+        }
       }
     },
     {
-      "url": "https://animesonline.org/filmes/violet-evergarden-movie/",
+      "url": "https://www.animesonline.in/video/346066",
       "expected": {
         "sync": true,
-        "title": "Tenki no Ko",
-        "identifier": "violet-evergarden-movie",
-        "overviewUrl": "https://animesonline.org/filmes/violet-evergarden-movie/",
-        "nextEpUrl": "",
+        "title": "One Piece",
+        "identifier": "One Piece",
         "episode": 1,
-        "uiSelector": false
-      }
-    },
-    {
-      "url": "https://animesonline.org/episodio/overlord-3-episodio-8/",
-      "expected": {
-        "sync": true,
-        "title": "Overlord 3",
-        "identifier": "overlord-3",
-        "overviewUrl": "https://animesonline.org/animes/overlord/",
-        "nextEpUrl": "https://animesonline.org/episodio/overlord-3-episodio-9/",
-        "episode": 8,
-        "uiSelector": false
+        "overviewUrl": "https://www.animesonline.in/anime/398a5cebfadb2606fbf802b42aad57755b4eae55",
+        "nextEpUrl": "https://www.animesonline.in/video/346078"
       }
     }
   ]

@@ -1,21 +1,21 @@
+/* eslint-disable no-await-in-loop */
 import { flashm } from '../../utils/general';
 import { ScriptProxy } from '../../utils/scriptProxy';
 import { pageInterface } from '../pageInterface';
 
 // Define the variable proxy element:
-const proxy = new ScriptProxy();
-proxy.addCaptureVariable(
-  'ApiClient',
-  `
-    if (window.hasOwnProperty("ApiClient")) {
-      return ApiClient;
-    } else {
-      return undefined;
-    }
-  `,
-);
+const proxy = new ScriptProxy('Jellyfin');
 
 let item: any;
+
+let baseUrl = '';
+
+class SessionsError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'SessionsError';
+  }
+}
 
 async function getApiKey() {
   return api.storage.get('Jellyfin_Api_Key');
@@ -26,7 +26,10 @@ async function setApiKey(key) {
 }
 
 async function getBase() {
-  return api.storage.get('Jellyfin_Base');
+  return api.storage.get('Jellyfin_Base').then(base => {
+    baseUrl = base;
+    return base;
+  });
 }
 
 async function setBase(key) {
@@ -52,7 +55,7 @@ async function checkApi(page) {
       const itemId = await returnPlayingItemId();
       if (!itemId) con.log('No video id');
 
-      const curUrl = `${window.location.origin}/#!/details?id=${itemId}`;
+      const curUrl = `${baseUrl || window.location.origin}/#!/details?id=${itemId}`;
 
       checkItemId(page, itemId, curUrl, true);
     }
@@ -61,76 +64,127 @@ async function checkApi(page) {
 
 async function urlChange(page) {
   $('html').addClass('miniMAL-hide');
-  if (window.location.href.indexOf('id=') !== -1) {
+  if (window.location.href.includes('id=')) {
     const id = utils.urlParam(window.location.href, 'id');
-    checkItemId(page, id);
+    await checkItemId(page, id);
   }
 }
 
 async function checkItemId(page, id, curUrl = '', video = false) {
-  let reqUrl = `/Items?ids=${id}`;
-  // eslint-disable-next-line consistent-return
-  apiCall(reqUrl, true).then(response => {
-    const data = JSON.parse(response.responseText);
-    if (!data.Items.length) {
-      return checkIfAuthIsUpToDate();
-    }
-    switch (data.Items[0].Type) {
-      case 'Episode':
-      case 'Season':
-        if (data.Items[0].Type === 'Episode' && !video) {
-          con.log('Execute Episode only on video');
-          // eslint-disable-next-line consistent-return
-          return;
-        }
+  const reqUrl = `/Items?ids=${id}`;
+  const response = await apiCall(reqUrl, true);
+  const data = JSON.parse(response.responseText);
+  if (!data.Items.length) {
+    return checkIfAuthIsUpToDate();
+  }
 
-        con.log('Season', data);
-        item = data.Items[0];
-        reqUrl = `/Items/${item.SeriesId}`;
-        apiCall(reqUrl, true).then(response2 => {
-          const genres: any = JSON.parse(response2.responseText);
-          con.log('genres', genres);
-          if (
-            genres.Path.toLowerCase().includes('anime') ||
-            genres.GenreItems.find(genre => genre.Name.toLowerCase() === 'anime') ||
-            genres.Tags.find(tag => tag.toLowerCase() === 'anime')
-          ) {
-            con.info('Anime detected');
-            if (curUrl) {
-              page.url = curUrl;
-              page.handlePage(page.url);
-            } else {
-              page.handlePage();
-            }
+  let seriesId;
 
-            $('html').removeClass('miniMAL-hide');
-          } else {
-            con.error('Not an Anime');
-          }
-        });
-        break;
-      case 'Series':
-        con.log('Series', data);
-        break;
-      default:
-        con.log('Not recognized', data);
+  const tempItem = data.Items[0];
+
+  switch (tempItem.Type) {
+    case 'Episode':
+      con.m('Episode').log(data);
+
+      if (!video || !$('video').first().attr('src')) {
+        throw 'Execute Episode only on video';
+      }
+
+      seriesId = tempItem.SeriesId;
+      break;
+    case 'Season':
+      con.m('Season').log(data);
+
+      seriesId = tempItem.SeriesId;
+      break;
+    case 'Movie':
+      con.m('Movie').log(data);
+
+      if (!video || !$('video').first().attr('src')) {
+        throw 'Execute Movie only on video';
+      }
+
+      seriesId = tempItem.SeriesId || tempItem.Id;
+      break;
+    case 'Series':
+      con.m('Series').log(data);
+      break;
+    default:
+      con.m('Not recognized').log(data);
+  }
+
+  if (!seriesId) {
+    throw 'No series id found';
+  }
+
+  if (!(await isAnime(seriesId))) {
+    throw 'Not an Anime';
+  }
+
+  item = tempItem;
+
+  con.info('Anime detected');
+  if (curUrl) {
+    page.url = curUrl;
+    page.handlePage(page.url);
+  } else {
+    page.handlePage();
+  }
+
+  $('html').removeClass('miniMAL-hide');
+
+  return true;
+}
+
+const isAnimeCache = {};
+
+async function isAnime(seriesId: string) {
+  const logger = con.m('isAnime').m(seriesId);
+  if (seriesId in isAnimeCache) {
+    logger.m('cached').log(isAnimeCache[seriesId]);
+    return isAnimeCache[seriesId];
+  }
+  const reqUrl = `/Items/${seriesId}`;
+  return apiCall(reqUrl, true).then(response => {
+    const meta: any = JSON.parse(response.responseText);
+    logger.log('meta', meta);
+    let isAnimeBool = false;
+    if (
+      meta.Path.toLowerCase().includes('anime') ||
+      meta.GenreItems.find(genre => genre.Name.toLowerCase() === 'anime') ||
+      meta.Tags.find(tag => tag.toLowerCase() === 'anime')
+    ) {
+      isAnimeBool = true;
     }
+    logger.log('isAnime', isAnimeBool);
+    isAnimeCache[seriesId] = isAnimeBool;
+    return isAnimeBool;
   });
 }
 
 async function returnPlayingItemId() {
   const deviceId = await getDeviceId();
   const userId = await getUser();
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      resolve('');
-    }, 10000);
-  }).then(async () => {
-    return getSession(deviceId, userId).then(sess => {
-      con.log('Now Playing', sess.NowPlayingItem);
-      return sess.NowPlayingItem.Id;
-    });
-  });
+  let i = 0;
+  await utils.wait(15000);
+  while ($('video').first().attr('src') && i < 10) {
+    con.m('playing').log('Waiting for session');
+    try {
+      const ses = await getSession(deviceId, userId).then(sess => {
+        con.log('Now Playing', sess.NowPlayingItem);
+        return sess.NowPlayingItem.Id;
+      });
+      return ses;
+    } catch (error) {
+      if (error.name !== 'SessionsError') {
+        throw error;
+      }
+    }
+    await utils.wait(5000);
+    i++;
+  }
+
+  throw new SessionsError('No Session');
 }
 
 async function getSession(deviceId, userId, user = true) {
@@ -158,7 +212,7 @@ async function parseSession(data, deviceId, userId, user) {
       con.m('Session').m(user).log('Fallback to request without ControllableByUserId');
       return getSession(deviceId, userId, false);
     }
-    throw 'Could not get session';
+    throw new SessionsError('Could not get session');
   }
   con.m('Session').log('found', data);
   return data[0];
@@ -211,67 +265,56 @@ async function testApi(retry = 0) {
 }
 
 async function checkApiClient() {
-  return new Promise((resolve, reject) => {
-    proxy.addProxy(async (caller: ScriptProxy) => {
-      const apiClient: any = proxy.getCaptureVariable('ApiClient');
-      con.m('apiClient').log(apiClient);
+  const apiClient = await proxy.getData();
+  con.m('apiClient').log(apiClient);
 
-      if (apiClient) {
-        if (apiClient._serverInfo && apiClient._serverInfo.AccessToken) {
-          setApiKey(apiClient._serverInfo.AccessToken);
-        }
-        if (apiClient._serverAddress) {
-          setBase(apiClient._serverAddress);
-        }
-        if (apiClient._currentUser && apiClient._currentUser.Id) {
-          setUser(apiClient._currentUser.Id);
-        } else if (apiClient._serverInfo && apiClient._serverInfo.UserId) {
-          setUser(apiClient._serverInfo.UserId);
-        }
-        resolve(true);
-        return;
-      }
-      reject();
-    });
-  });
+  if (apiClient) {
+    if (apiClient._serverInfo && apiClient._serverInfo.AccessToken) {
+      setApiKey(apiClient._serverInfo.AccessToken);
+    }
+    if (apiClient._serverAddress) {
+      setBase(apiClient._serverAddress);
+    }
+    if (apiClient._currentUser && apiClient._currentUser.Id) {
+      setUser(apiClient._currentUser.Id);
+    } else if (apiClient._serverInfo && apiClient._serverInfo.UserId) {
+      setUser(apiClient._serverInfo.UserId);
+    }
+    return true;
+  }
+  throw 'No ApiClient';
 }
 
 async function getDeviceId(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    proxy.addProxy(async (caller: ScriptProxy) => {
-      const apiClient: any = proxy.getCaptureVariable('ApiClient');
-      con.m('apiClient').log(apiClient);
+  const apiClient = await proxy.getData();
+  con.m('apiClient').log(apiClient);
 
-      if (apiClient && apiClient._deviceId) {
-        con.m('apiClient').log('clientId', apiClient._deviceId);
-        resolve(apiClient._deviceId);
-        return;
-      }
-      reject();
-    });
-  });
+  if (apiClient && apiClient._deviceId) {
+    con.m('apiClient').log('clientId', apiClient._deviceId);
+    return apiClient._deviceId;
+  }
+
+  throw 'No DeviceId';
 }
 
-function checkIfAuthIsUpToDate() {
-  proxy.addProxy(async (caller: ScriptProxy) => {
-    const apiClient: any = proxy.getCaptureVariable('ApiClient');
-    con.m('apiClient').log(apiClient);
-    const curKey = getApiKey();
+async function checkIfAuthIsUpToDate() {
+  const apiClient = await proxy.getData();
+  con.m('apiClient').log(apiClient);
+  const curKey = getApiKey();
 
-    if (
-      apiClient &&
-      apiClient._serverInfo &&
-      apiClient._serverInfo.AccessToken &&
-      curKey === apiClient._serverInfo.AccessToken
-    ) {
-      return;
-    }
-    con.error('Reset Authentication');
-    await setBase('');
-    await setApiKey('');
-    await setUser('');
-    await checkApiClient();
-  });
+  if (
+    apiClient &&
+    apiClient._serverInfo &&
+    apiClient._serverInfo.AccessToken &&
+    curKey === apiClient._serverInfo.AccessToken
+  ) {
+    return;
+  }
+  con.error('Reset Authentication');
+  await setBase('');
+  await setApiKey('');
+  await setUser('');
+  await checkApiClient();
 }
 
 // Helper
@@ -309,13 +352,16 @@ export const Jellyfin: pageInterface = {
   languages: ['Many'],
   type: 'anime',
   isSyncPage(url) {
-    if (item.Type === 'Episode') {
+    if (item.Type === 'Episode' || item.Type === 'Movie') {
       return true;
     }
     return false;
   },
   sync: {
     getTitle(url) {
+      if (item.Type === 'Movie') {
+        return item.Name;
+      }
       return (
         item.SeriesName + (item.ParentIndexNumber > 1 ? ` Season ${item.ParentIndexNumber}` : '')
       );
@@ -326,7 +372,7 @@ export const Jellyfin: pageInterface = {
       return item.Id;
     },
     getOverviewUrl(url) {
-      return `${Jellyfin.domain}/#!/details?id=${Jellyfin.sync.getIdentifier(url)}`;
+      return `${baseUrl || Jellyfin.domain}/#!/details?id=${Jellyfin.sync.getIdentifier(url)}`;
     },
     getEpisode(url) {
       return item.IndexNumber;
@@ -343,10 +389,13 @@ export const Jellyfin: pageInterface = {
       j.$('.page:not(.hide) .detailPageContent').first().prepend(j.html(selector));
     },
   },
-  init(page) {
+  async init(page) {
     api.storage.addStyle(
       require('!to-string-loader!css-loader!less-loader!./style.less').toString(),
     );
+
+    await proxy.injectScript();
+
     testApi().then(() => {
       con.info('Authenticated');
       utils.changeDetect(
@@ -360,11 +409,13 @@ export const Jellyfin: pageInterface = {
           return src;
         },
       );
-      utils.urlChangeDetect(function () {
-        if (!(window.location.href.indexOf('video') !== -1)) {
-          page.reset();
-          urlChange(page);
-        }
+      utils.urlChangeDetect(() => {
+        const newUrl = window.location.href;
+        // We don't need to reset state when switching to the video player or if a dialog pops up
+        if (newUrl.includes('/video') || newUrl.includes('/dialog')) return;
+
+        page.reset();
+        urlChange(page);
       });
       j.$(document).ready(function () {
         utils.waitUntilTrue(

@@ -1,8 +1,9 @@
 const webpack = require('webpack');
 const path = require('path');
 const appTarget = process.env.APP_TARGET || 'general';
-const SentryWebpackPlugin = require('@sentry/webpack-plugin');
 const packageJson = require('../package.json');
+
+const { getKeys } = require('./utils/keys');
 
 plugins = [
   new webpack.NormalModuleReplacementPlugin(/(.*)-general/, function(resource) {
@@ -12,35 +13,17 @@ plugins = [
     con: path.resolve(__dirname, './../src/utils/consoleBG'),
     utils: path.resolve(__dirname, './../src/utils/general'),
     api: path.resolve(__dirname, './../src/api/webextension'),
-    j: path.resolve(__dirname, './../src/utils/j'),
   }),
   new webpack.DefinePlugin({
-    env: JSON.stringify({
-      CONTEXT: process.env.MODE === 'travis' ? 'production' : 'development',
-    }),
+    __VUE_OPTIONS_API__: true,
+    __VUE_PROD_DEVTOOLS__: false,
+    __MAL_SYNC_KEYS__: JSON.stringify(getKeys()),
   }),
 ]
 
-if (process.env.SENTRY_AUTH_TOKEN) {
-  plugins.push(
-    new SentryWebpackPlugin({
-      url: process.env.SENTRY_AUTH_URL,
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-      org: 'shark',
-      project: 'malsync',
-      release: `malsync@${packageJson.version}`,
-      include: 'dist/webextension',
-      ignore: ['node_modules', 'webpack.config.js'],
-      setCommits: {
-        auto: true,
-      },
-    }),
-  );
-}
-
 module.exports = {
   entry: {
-    index: path.join(__dirname, '..', 'src/background.ts'),
+    index: path.join(__dirname, '..', 'src/index-webextension/serviceworker.ts'),
   },
   module: {
     rules: [

@@ -46,12 +46,14 @@ export const Guya: pageInterface = {
     readerConfig: [
       {
         current: {
-          selector: '.ReaderImageWrapper',
-          mode: 'countAbove',
+          selector: '.rdr-page-selector-counter',
+          mode: 'text',
+          regex: '^\\d+',
         },
         total: {
-          selector: '.ReaderImageWrapper',
-          mode: 'count',
+          selector: '.rdr-page-selector-counter',
+          mode: 'text',
+          regex: '\\d+$',
         },
       },
     ],
@@ -88,6 +90,8 @@ export const Guya: pageInterface = {
       require('!to-string-loader!css-loader!less-loader!./style.less').toString(),
     );
     let interval;
+
+    Guya.domain = `${window.location.protocol}//${window.location.hostname}`;
 
     utils.changeDetect(
       () => {

@@ -12,7 +12,7 @@
 </template>
 
 <script lang="ts" setup>
-import { defineProps, PropType } from 'vue';
+import { PropType } from 'vue';
 import SettingsDiscordIcon from './settings/settings-discord-icon.vue';
 
 defineProps({
@@ -54,27 +54,27 @@ defineProps({
   line-height: 1;
 
   .before {
-    margin-right: @img-text-spacing;
+    margin-inline-end: @img-text-spacing;
   }
   .after {
-    margin-left: @img-text-spacing;
+    margin-inline-start: @img-text-spacing;
   }
 
   &.small {
     .before {
-      margin-right: 5px;
+      margin-inline-end: 5px;
     }
     .after {
-      margin-left: 5px;
+      margin-inline-start: 5px;
     }
   }
 
   &.big {
     .before {
-      margin-right: 16px;
+      margin-inline-end: 16px;
     }
     .after {
-      margin-left: 16px;
+      margin-inline-start: 16px;
     }
   }
 
