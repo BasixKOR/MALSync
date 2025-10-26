@@ -104,7 +104,7 @@
     <td>:x:</td>
     <td>:heavy_check_mark:</td>
   </tr><tr>
-    <td><a href="https://animekai.bz"><img src="https://favicon.malsync.moe/?domain=https://animekai.bz"> AnimeKAI</a></td>
+    <td><a href="https://animekai.to"><img src="https://favicon.malsync.moe/?domain=https://animekai.to"> AnimeKAI</a></td>
     <td>English</td>
     <td>:x:</td>
     <td>:heavy_check_mark:</td>
@@ -766,6 +766,13 @@
   </tr><tr>
     <td><a href="https://jestful.net/"><img src="https://favicon.malsync.moe/?domain=https://jestful.net/"> Jestful</a></td>
     <td>Japanese</td>
+    <td>:heavy_check_mark:</td>
+    <td>:x:</td>
+    <td>:x:</td>
+    <td>:x:</td>
+  </tr><tr>
+    <td><a href="https://kagane.org"><img src="https://favicon.malsync.moe/?domain=https://kagane.org"> Kagane</a></td>
+    <td>English</td>
     <td>:heavy_check_mark:</td>
     <td>:x:</td>
     <td>:x:</td>

@@ -635,7 +635,7 @@
     "name": "AnimeVost"
   },
   {
-    "domain": "https://animekai.bz",
+    "domain": "https://animekai.to",
     "type": "anime",
     "name": "AnimeKAI"
   },
@@ -863,6 +863,11 @@
     "domain": "https://mangaplus.shueisha.co.jp",
     "type": "manga",
     "name": "MangaPlus"
+  },
+  {
+    "domain": "https://kagane.org",
+    "type": "manga",
+    "name": "Kagane"
   },
   {
     "domain": "https://mangaball.net",
