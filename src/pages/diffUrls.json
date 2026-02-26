@@ -160,7 +160,9 @@
       "*://*.rpmvip.com/*",
       "*://callistanise.com/*",
       "*://habetar.com/*",
-      "*://yuguaab.com/*"
+      "*://yuguaab.com/*",
+      "*://*.fast4speed.rsvp/*",
+      "*://*.sharepoint.com/*"
     ]
   }
 }
