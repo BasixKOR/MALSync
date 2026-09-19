@@ -505,6 +505,7 @@ module.exports = {
       '*://tracylocalschool.com/e/*',
       '*://eugenemakedraw.com/e/*',
       '*://johnfullwonder.com/e/*',
+      '*://katherineschoolphone.com/e/*',
       // auto-voe-replace-dont-remove
     ],
   },
