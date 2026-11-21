@@ -1,7 +1,4 @@
 {
-  "0.12.1": {
-    "iframe": []
-  },
   "0.12.2": {
     "Anime365": [
       "*://smotret-anime.org/*",
@@ -119,5 +116,8 @@
       "*://jamesbornmain.com/e/*",
       "*://jeremyparticipantanything.com/e/*"
     ]
+  },
+  "0.13.0": {
+    "iframe": []
   }
 }
